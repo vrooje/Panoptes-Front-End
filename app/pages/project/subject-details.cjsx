@@ -71,22 +71,15 @@ CommentField = React.createClass
     onSubmit: Function.prototype
 
   render: ->
-    <ChangeListener target={auth}>{=>
-      <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
-        if user?
-          <form className="comment-field" onSubmit={@handleSubmit}>
-            <textarea name="content-input" rows="8" className="standard-input full" onKeyPress={@handleTextareaKeyPress} /><br />
-            <button type="submit" className="standard-button">Post</button>
-          </form>
-        else
-          <p>You must be signed in to comment.</p>
-      }</PromiseRenderer>
-    }</ChangeListener>
-
-  handleTextareaKeyPress: (e) ->
-    console.log e.metaKey, e.which, e.keyCode, e.key, e
-    if e.metaKey and e.which is 13
-      @handleSubmit arguments...
+    <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
+      if user?
+        <form className="comment-field" onSubmit={@handleSubmit}>
+          <textarea name="content-input" rows="8" className="standard-input full" /><br />
+          <button type="submit" className="standard-button">Post</button>
+        </form>
+      else
+        <p>You must be signed in to comment.</p>
+    }</PromiseRenderer>
 
   handleSubmit: (e) ->
     e.preventDefault()
