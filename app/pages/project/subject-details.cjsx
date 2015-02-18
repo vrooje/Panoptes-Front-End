@@ -59,7 +59,6 @@ CommentField = React.createClass
         contentInput.value = ''
         @props.onSubmit? e
 
-
 CommentsArea = React.createClass
   mixins: [ReactFire]
 
@@ -96,11 +95,13 @@ CommentsArea = React.createClass
 
 module.exports = React.createClass
   componentDidMount: ->
+    Firebase.goOnline()
     auth.listen @handleAuthChange
     @handleAuthChange()
 
   componentWillUnmount: ->
     auth.stopListening @handleAuthChange
+    Firebase.goOffline()
 
   handleAuthChange: ->
     auth.checkCurrent().then (user) ->
