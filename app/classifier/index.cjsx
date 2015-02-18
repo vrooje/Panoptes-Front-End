@@ -4,6 +4,7 @@ ChangeListener = require '../components/change-listener'
 SubjectViewer = require './subject-viewer'
 ClassificationSummary = require './classification-summary'
 tasks = require './tasks'
+{Link} = require 'react-router'
 PromiseToSetState = require '../lib/promise-to-set-state'
 
 NOOP = Function.prototype
@@ -107,7 +108,7 @@ Classifier = React.createClass
       <hr />
 
       <nav className="task-nav">
-        <a className="talk standard-button" href="#/todo/talk">Talk</a>
+        <Link to="subject-details" params={id: @props.subject.id} className="talk standard-button">Talk</Link>
         <button type="button" className="continue major-button" onClick={@props.onClickNext}>Next</button>
       </nav>
     </div>

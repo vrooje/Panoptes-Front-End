@@ -109,7 +109,7 @@ module.exports = React.createClass
 
   render: ->
     if @state.project?
-      <ProjectPage project={@state.project} />
+      <ProjectPage {...@props} project={@state.project} />
     else
       <div className="content-container">
         {if @state.rejected.project?

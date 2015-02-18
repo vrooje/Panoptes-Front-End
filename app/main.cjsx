@@ -36,6 +36,7 @@ routes = <Route handler={App}>
     <Route name="project-team" path="team" handler={require './pages/project/team'} />
     <Route name="project-classify" path="classify" handler={require './pages/project/classify'} />
     <Route name="project-talk" path="talk" handler={require './pages/project/talk'} />
+    <Route name="subject-details" path="subjects/:id" handler={require './pages/project/subject-details'} />
   </Route>
 
   <Route name="build" handler={require './pages/build'} />

@@ -6,12 +6,14 @@
     "counterpart": "^0.16.4",
     "debounce": "^1.0.0",
     "emojify.js": "^0.9.5",
+    "firebase": "^2.2.0",
     "json-api-client": "~0.1.11",
     "lodash.merge": "^2.4.1",
     "marked": "^0.3.2",
     "react": "^0.12.1",
     "react-router": "^0.11.6",
     "react-translate-component": "^0.7.0",
+    "reactfire": "^0.4.0",
     "tether": "HubSpot/tether#df8cd44"
   },
   "devDependencies": {
