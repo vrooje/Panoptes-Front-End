@@ -32,6 +32,34 @@ Comment = React.createClass
       <Markdown>{@props.comment.content}</Markdown>
     </div>
 
+CommentField = React.createClass
+  getDefaultProps: ->
+    onSubmit: Function.prototype
+
+  render: ->
+    <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
+      if user?
+        <form className="comment-field" onSubmit={@handleSubmit}>
+          <textarea name="content-input" rows="8" className="standard-input full" /><br />
+          <button type="submit" className="standard-button">Post</button>
+        </form>
+      else
+        <p>You must be signed in to comment.</p>
+    }</PromiseRenderer>
+
+  handleSubmit: (e) ->
+    e.preventDefault()
+    contentInput = @getDOMNode().querySelector '[name="content-input"]'
+    @props.destination.push
+      timestamp: Firebase.ServerValue.TIMESTAMP
+      subject: @props.subject.id
+      user: firebaseRoot.getAuth()?.uid
+      content: contentInput.value
+      =>
+        contentInput.value = ''
+        @props.onSubmit? e
+
+
 CommentsArea = React.createClass
   mixins: [ReactFire]
 
@@ -66,30 +94,6 @@ CommentsArea = React.createClass
   displayAll: ->
     @setState displayCount: @state.comments.length
 
-CommentField = React.createClass
-  getDefaultProps: ->
-    onSubmit: Function.prototype
-
-  render: ->
-    <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
-      if user?
-        <form className="comment-field" onSubmit={@handleSubmit}>
-          <textarea name="content-input" rows="8" className="standard-input full" /><br />
-          <button type="submit" className="standard-button">Post</button>
-        </form>
-      else
-        <p>You must be signed in to comment.</p>
-    }</PromiseRenderer>
-
-  handleSubmit: (e) ->
-    e.preventDefault()
-    @props.destination.push
-      timestamp: Firebase.ServerValue.TIMESTAMP
-      subject: @props.subject.id
-      user: firebaseRoot.getAuth()?.uid
-      content: @getDOMNode().querySelector('[name="content-input"]').value
-      @props.onSubmit.bind this, arguments...
-
 module.exports = React.createClass
   componentDidMount: ->
     auth.listen @handleAuthChange
@@ -101,7 +105,7 @@ module.exports = React.createClass
   handleAuthChange: ->
     auth.checkCurrent().then (user) ->
       if user?
-        firebaseRoot.authAnonymously (error, authData) =>
+        firebaseRoot.authAnonymously (error, authData) ->
           firebaseRoot.child('users').child(authData.uid).set user.id
       else
         firebaseRoot.unauth()
@@ -113,8 +117,6 @@ module.exports = React.createClass
           <SubjectViewer subject={subject} />
         </div>
         <hr />
-        <div className="">
-          <CommentsArea subject={subject} />
-        </div>
+        <CommentsArea subject={subject} />
       </div>
     }</PromiseRenderer>
