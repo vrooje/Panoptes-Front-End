@@ -1,8 +1,14 @@
 React = require 'react'
 window.React = React
 Router = {RouteHandler, DefaultRoute, Route, NotFoundRoute} = require 'react-router'
+redirect = require './pages/redirect'
 MainHeader = require './partials/main-header'
 MainFooter = require './partials/main-footer'
+
+STARGAZING = location.hostname is 'stargazing.zooniverse.org' or location.search.match(/(?:\?|&)stargazing=1(?:\W|$)/)?
+
+if STARGAZING
+  console?.info 'This is what the site will look like during Stargazing Live.'
 
 App = React.createClass
   displayName: 'PanoptesApp'
@@ -17,18 +23,15 @@ App = React.createClass
     </div>
 
 routes = <Route handler={App}>
-  <DefaultRoute name="home" handler={require './pages/home'} />
+  <DefaultRoute name="home" handler={if STARGAZING then redirect 'project-home', owner: 'brian-testing', name: 'Supernovae' else require './pages/home'} />
+  <Route name="about" handler={redirect 'https://www.zooniverse.org/about'} />
 
-  <Route path="account" handler={require './pages/sign-in'}>
-    <Route name="sign-in" handler={require './partials/sign-in-form'} />
-    <Route name="register" handler={require './partials/register-form'} />
-  </Route>
-  <Route name="settings" handler={require './pages/settings'} />
-  <Route name="privacy" handler={require './pages/privacy-policy'} />
+  <Route name="settings" handler={if STARGAZING then redirect 'https://www.zooniverse.org/account/settings' else require './pages/settings'} />
+  <Route name="privacy" handler={if STARGAZING then redirect 'https://www.zooniverse.org/privacy' else require './pages/privacy-policy'} />
 
-  <Route name="user-profile" path="users/:name" handler={require './pages/user-profile'} />
+  <Route name="user-profile" path="users/:name" handler={if STARGAZING then redirect 'https://www.zooniverse.org/me' else require './pages/user-profile'} />
 
-  <Route name="projects" handler={require './pages/projects'} />
+  <Route name="projects" handler={if STARGAZING then redirect 'https://www.zooniverse.org/projects' else require './pages/projects'} />
   <Route path="projects/:owner/:name" handler={require './pages/project'}>
     <DefaultRoute name="project-home" handler={require './pages/project/home'} />
     <Route name="project-science-case" path="science-case" handler={require './pages/project/science-case'} />
@@ -61,5 +64,5 @@ mainContainer = document.createElement 'div'
 mainContainer.id = 'panoptes-main-container'
 document.body.appendChild mainContainer
 
-Router.run routes, (Handler, handlerProps) ->
+external.context = Router.run routes, (Handler, handlerProps) ->
   React.render(<Handler {...handlerProps} />, mainContainer);
