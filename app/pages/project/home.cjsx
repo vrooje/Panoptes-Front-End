@@ -1,4 +1,5 @@
 React = require 'react'
+FirebaseChildCounter = require '../../components/firebase-child-counter'
 Markdown = require '../../components/markdown'
 HandlePropChanges = require '../../lib/handle-prop-changes'
 PromiseToSetState = require '../../lib/promise-to-set-state'
@@ -34,6 +35,10 @@ module.exports = React.createClass
     <div className="project-home-page">
       <div className="call-to-action-container content-container">
         <Markdown className="description">{@props.project.description}</Markdown>
+        <div className="stats">
+          So far <strong><FirebaseChildCounter path="/project-counters/#{@props.project.id}/classifications" /></strong> classifications
+          have been contributed by <strong><FirebaseChildCounter path="/project-counters/#{@props.project.id}/volunteers" /></strong> volunteers.
+        </div>
 
         {for workflow in @state.workflows
           <Link to="project-classify" params={linkParams} query={workflow: workflow.id} key={workflow.id} className="call-to-action standard-button">

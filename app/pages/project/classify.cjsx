@@ -1,3 +1,4 @@
+Firebase = require 'firebase'
 React = require 'react'
 TitleMixin = require '../../lib/title-mixin'
 HandlePropChanges = require '../../lib/handle-prop-changes'
@@ -6,6 +7,9 @@ apiClient = require '../../api/client'
 animatedScrollTo = require 'animated-scrollto'
 counterpart = require 'counterpart'
 Classifier = require '../../classifier'
+auth = require '../../api/auth'
+
+countersRef = new Firebase "https://panoptes-comments.firebaseio.com/project-counters"
 
 SKIP_CELLECT = location.search.match(/\Wcellect=0(?:\W|$)/)?
 
@@ -19,6 +23,11 @@ window.currentClassifications =
 
 window.upcomingSubjects =
   forWorkflow: {}
+
+browserFingerprint = localStorage.getItem 'browser-fingerprint'
+unless browserFingerprint
+  localStorage.setItem 'browser-fingerprint', "#{Date.now()}#{Math.random()}"
+  browserFingerprint = localStorage.getItem 'browser-fingerprint'
 
 module.exports = React.createClass
   displayName: 'ProjectClassifyPage'
@@ -137,7 +146,17 @@ module.exports = React.createClass
   handleCompletion: ->
     console?.info 'Completed classification', @state.classification
     @state.classification.save().then (classification) =>
-      console?.log 'Saved classification', classification.id
+      console.log 'Saved'
+
+      countersRef.child("#{@props.project.id}/classifications").push classification.id
+
+      auth.checkCurrent().then (user) =>
+        identifier = user?.id ? browserFingerprint
+        volunteerRef = countersRef.child "#{@props.project.id}/volunteers/#{identifier}"
+        volunteerRef.once 'value', (snap) =>
+          unless snap.val()?
+            volunteerRef.set true
+
       classification.uncache()
 
   loadAnotherSubject: ->
