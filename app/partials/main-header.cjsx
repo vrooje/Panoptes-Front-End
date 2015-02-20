@@ -51,7 +51,7 @@ module.exports = React.createClass
       <nav className="main-nav">
         <Link to="about" className="main-nav-item"><Translate content="mainNav.about" /></Link>
         <Link to="projects" className="main-nav-item"><Translate content="mainNav.projects" /></Link>
-        <span className="main-nav-item"><Translate content="mainNav.discuss" /></span>
+        <a className="main-nav-item"><Translate content="mainNav.discuss" /></a>
         <hr />
         {if @state.user?
           <Link to="build" className="main-nav-item"><Translate className="minor" content="mainNav.lab" /></Link>}
