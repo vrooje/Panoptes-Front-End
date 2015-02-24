@@ -22,6 +22,9 @@ module.exports = React.createClass
     @state.ref.off 'value', @handleChildrenUpdate
 
   handleChildrenUpdate: (snap) ->
+    # NOTE: DO NOT DO THIS.
+    # It downloads every item.
+    # Just maintain a number somewhere instead.
     @setState count: snap.numChildren()
 
   render: ->

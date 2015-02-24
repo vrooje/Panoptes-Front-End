@@ -63,7 +63,7 @@ ProjectPage = React.createClass
             <Link to="project-classify" params={params} className="classify tabbed-content-tab">
               <Translate content="project.nav.classify" />
             </Link>
-            <Link to="project-talk" params={params} className="tabbed-content-tab">
+            <Link to="project-chat-popular" params={params} className="tabbed-content-tab">
               <Translate content="project.nav.discuss" />
             </Link>
           </nav>

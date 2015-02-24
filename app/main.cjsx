@@ -35,7 +35,15 @@ routes = <Route handler={App}>
     <Route name="project-status" path="status" handler={require './pages/project/status'} />
     <Route name="project-team" path="team" handler={require './pages/project/team'} />
     <Route name="project-classify" path="classify" handler={require './pages/project/classify'} />
-    <Route name="project-talk" path="talk" handler={require './pages/project/talk'} />
+    <Route path="discuss" handler={require './pages/project/chat'}>
+      <DefaultRoute name="project-chat-recent" handler={require './pages/project/chat/recent'} />
+      <Route name="project-chat-popular" path="popular" handler={require './pages/project/chat/popular'} />
+      <Route name="project-chat-mine" path="mine" handler={require './pages/project/chat/mine'} />
+      <Route name="project-chat-board" path="board/:boardID" handler={require './pages/project/chat/board'} />
+      <Route name="project-chat-thread" path="board/:boardID/:threadID" handler={require './pages/project/chat/thread'} />
+      <Route name="project-chat-moderation" path="moderation" handler={require './pages/project/chat/moderation'} />
+      <Route name="project-chat-search" path="search" handler={require './pages/project/chat/search-results'} />
+    </Route>
     <Route name="subject-details" path="subjects/:id" handler={require './pages/project/subject-details'} />
   </Route>
 
@@ -56,6 +64,7 @@ routes = <Route handler={App}>
   <Route path="dev/workflow-tasks-editor" handler={require './components/workflow-tasks-editor'} />
   <Route path="dev/classifier" handler={require './classifier'} />
   <Route path="dev/aggregate" handler={require './components/aggregate-view'} />
+  <Route path="dev/subject-details/:projectID/:subjectID" handler={require './pages/project/subject-details'} />
 </Route>
 
 mainContainer = document.createElement 'div'
