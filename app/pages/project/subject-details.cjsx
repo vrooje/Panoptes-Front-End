@@ -3,14 +3,12 @@ TitleMixin = require '../../lib/title-mixin'
 PromiseRenderer = require '../../components/promise-renderer'
 apiClient = require '../../api/client'
 SubjectViewer = require '../../components/subject-viewer'
-stingyFirebase = require '../../lib/stingy-firebase'
 FirebaseList = require '../../components/firebase-list'
+stingyFirebase = require '../../lib/stingy-firebase'
 Comment = require './chat/comment'
 ChangeListener = require '../../components/change-listener'
 auth = require '../../api/auth'
 PromiseRenderer = require '../../components/promise-renderer'
-
-commentsRef = stingyFirebase.child 'comments'
 
 module.exports = React.createClass
   mixins: [TitleMixin, stingyFirebase.Mixin]
@@ -19,6 +17,8 @@ module.exports = React.createClass
     "Subject details"
 
   render: ->
+    commentsRef = stingyFirebase.child "projects/#{@props.project.id}/comments"
+
     <div className="subject-details-page columns-container content-container">
       <PromiseRenderer promise={apiClient.type('subjects').get @props.params.subjectID}>{(subject) =>
         <div className="classifier">
@@ -31,7 +31,7 @@ module.exports = React.createClass
       <div>
         <FirebaseList ref="list" items={commentsRef.orderByChild('subject').equalTo @props.params.subjectID}>{(key, comment) =>
           unless comment.flagged
-            <Comment key={key} id={key} comment={comment} reference={commentsRef.child key} />
+            <Comment key={key} comment={comment} reference={commentsRef.child key} />
         }</FirebaseList>
 
         <ChangeListener target={auth}>{=>
@@ -53,14 +53,14 @@ module.exports = React.createClass
 
     contentInput = @getDOMNode().querySelector '[name="comment-content"]'
 
-    stingyFirebase.child('comments').push
-      user: stingyFirebase.getAuth()?.uid
-      project: projectID
-      subject: subjectID
+    stingyFirebase.child("projects/#{@props.project.id}/comments").push
+      subject: @props.params.subjectID
       content: contentInput.value
-      =>
-        @refs.list.displayAll()
-        contentInput.value = ''
+      timestamp: Firebase.ServerValue.TIMESTAMP
 
-        stingyFirebase.child("subjects/#{subjectID}/count").transaction (count) ->
-          (count ? 0) + 1
+    stingyFirebase.child("projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/last-update").set Firebase.ServerValue.TIMESTAMP
+    stingyFirebase.child("projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/count").transaction (count) ->
+      (count ? 0) + 1
+
+    contentInput.value = ''
+    @refs.list.displayAll()

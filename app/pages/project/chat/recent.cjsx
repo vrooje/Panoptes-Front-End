@@ -3,8 +3,6 @@ stingyFirebase = require '../../../lib/stingy-firebase'
 FirebaseList = require '../../../components/firebase-list'
 Comment = require './comment'
 
-commentsRef = stingyFirebase.child 'comments'
-
 module.exports = React.createClass
   displayName: 'ProjectChatRecent'
 
@@ -17,9 +15,11 @@ module.exports = React.createClass
     comments: []
 
   render: ->
+    commentsRef = stingyFirebase.child "projects/#{@props.project.id}/comments"
+
     <div className="content-container">
-      <FirebaseList items={commentsRef.orderByChild('project').equalTo(@props.project.id).limitToLast @props.howMany}>{(key, comment) =>
+      <FirebaseList items={commentsRef.limitToLast @props.howMany}>{(key, comment) =>
         unless comment.flagged
-          <Comment key={key} comment={comment} reference={commentsRef.child key} summary />
+          <Comment key={key} comment={comment} reference={commentsRef.child key} />
       }</FirebaseList>
     </div>

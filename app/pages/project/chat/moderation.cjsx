@@ -3,12 +3,12 @@ stingyFirebase = require '../../../lib/stingy-firebase'
 FirebaseList = require '../../../components/firebase-list'
 Comment = require './comment'
 
-commentsRef = stingyFirebase.child 'comments'
-
 module.exports = React.createClass
   displayName: 'ProjectChatModeration'
 
   render: ->
+    commentsRef = stingyFirebase.child "projects/#{@props.project.id}/comments"
+
     <div className="content-container">
       <FirebaseList items={commentsRef.orderByChild('flagged').equalTo true}>{(key, comment) =>
         <div key={key}>
@@ -21,8 +21,8 @@ module.exports = React.createClass
     </div>
 
   handleUnflag: (key) ->
-    commentsRef.child("#{key}/flagged").set false
+    stingyFirebase.child("projects/#{@props.project.id}/comments/#{key}/flagged").set false
 
   handleDelete: (key, e) ->
     if e.shiftKey or confirm 'Really delete this comment?'
-      commentsRef.child(key).remove()
+      stingyFirebase.child("projects/#{@props.project.id}/comments/#{key}").remove()

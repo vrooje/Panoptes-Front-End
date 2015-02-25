@@ -44,7 +44,7 @@ routes = <Route handler={App}>
       <Route name="project-chat-moderation" path="moderation" handler={require './pages/project/chat/moderation'} />
       <Route name="project-chat-search" path="search" handler={require './pages/project/chat/search-results'} />
     </Route>
-    <Route name="subject-details" path="subjects/:id" handler={require './pages/project/subject-details'} />
+    <Route name="subject-details" path="subjects/:subjectID" handler={require './pages/project/subject-details'} />
   </Route>
 
   <Route name="build" handler={require './pages/build'} />

@@ -11,6 +11,7 @@ module.exports = React.createClass
       owner: @props.owner.display_name
       name: @props.project.display_name
       boardID: @props.params.boardID
+
     <div className="content-container">
       <FirebaseList ref="threadsList" items={stingyFirebase.child("projects/#{@props.project.id}/threads").orderByChild('board').equalTo(@props.params.boardID)}>{(key, thread) =>
         linkParams = Object.create defaultLinkParams
@@ -38,10 +39,12 @@ module.exports = React.createClass
     threadRef = stingyFirebase.child("projects/#{@props.project.id}/threads").push
       board: @props.params.boardID
       name: threadNameInput.value
+      timestamp: Firebase.ServerValue.TIMESTAMP
 
     stingyFirebase.child("projects/#{@props.project.id}/comments").push
       thread: threadRef.key()
       content: commentContentInput.value
+      timestamp: Firebase.ServerValue.TIMESTAMP
 
     threadNameInput.value = ''
     commentContentInput.value = ''
