@@ -5,30 +5,31 @@ module.exports = React.createClass
   mixins: [stingyFirebase.Mixin]
 
   getDefaultProps: ->
-    items: null
+    items: null # Actually "ref" would be a better name, but it's taken.
 
   getInitialState: ->
-    items: []
+    items: {}
     displayCount: NaN
 
   componentDidMount: ->
     @bindAsObject @props.items, 'items'
 
   componentWillUpdate: (nextProps, nextState) ->
+    nextState.items ?= {}
     if isNaN @state.displayCount
-      nextState.displayCount = nextState.items.length
+      nextState.displayCount = Object.keys(nextState.items).length
 
   render: ->
-    ItemComponent = @props.render
+    itemsKeys = Object.keys @state.items
 
     <div className="firebase-list">
-      {for key in Object.keys(@state.items)[0...@state.displayCount]
+      {for key in itemsKeys[0...@state.displayCount]
         # We're gonna trust that the object is in order.
         @props.children key, @state.items[key]}
 
-      {if @state.items.length > @state.displayCount
+      {if itemsKeys.length > @state.displayCount
         <div>
-          <button type="button" className="minor-button" onClick={@displayAll}>Load {@state.items.length - @state.displayCount} more</button>
+          <button type="button" className="minor-button" onClick={@displayAll}>Load {itemsKeys.length - @state.displayCount} more</button>
         </div>}
     </div>
 
