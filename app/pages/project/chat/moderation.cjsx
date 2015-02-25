@@ -11,18 +11,18 @@ module.exports = React.createClass
   render: ->
     <div className="content-container">
       <FirebaseList items={commentsRef.orderByChild('flagged').equalTo true}>{(key, comment) =>
-        <div>
-          <Comment key={key} comment={comment} reference={commentsRef.child key} />
-          <button type="button" onClick={@handleUnflag}>Unflag</button>
-          <button type="button" onClick={@handleDelete}>Delete</button>
+        <div key={key}>
+          <Comment comment={comment} reference={commentsRef.child key} />
+          <button type="button" onClick={@handleUnflag.bind this, key}>Unflag</button>
+          <button type="button" onClick={@handleDelete.bind this, key}>Delete</button>
           <hr />
         </div>
       }</FirebaseList>
     </div>
 
-  handleUnflag: ->
-    @props.reference.child('flagged').set false
+  handleUnflag: (key) ->
+    commentsRef.child("#{key}/flagged").set false
 
-  handleDelete: (e) ->
+  handleDelete: (key, e) ->
     if e.shiftKey or confirm 'Really delete this comment?'
-      @props.reference.remove()
+      commentsRef.child(key).remove()
