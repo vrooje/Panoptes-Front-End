@@ -9,8 +9,7 @@ root = new Firebase 'https://panoptes-comments.firebaseio.com'
 auth.listen ->
   auth.checkCurrent().then (user) ->
     if user?
-      root.authAnonymously (error, authData) ->
-        root.child('users').child(authData.uid).set user.id
+      root.authWithCustomToken user.firebase_auth_token, (error, authData) ->
     else
       root.unauth()
 

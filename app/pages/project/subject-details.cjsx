@@ -56,6 +56,7 @@ module.exports = React.createClass
     stingyFirebase.child("projects/#{@props.project.id}/comments").push
       subject: @props.params.subjectID
       content: contentInput.value
+      user: stingyFirebase.getAuth().uid
       timestamp: Firebase.ServerValue.TIMESTAMP
 
     stingyFirebase.child("projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/last-update").set Firebase.ServerValue.TIMESTAMP

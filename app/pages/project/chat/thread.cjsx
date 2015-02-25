@@ -10,7 +10,7 @@ module.exports = React.createClass
     commentsRef = stingyFirebase.child "projects/#{@props.project.id}/comments"
 
     <div className="content-container">
-      <FirebaseList ref="commentsList" items={commentsRef.orderByChild('thread').equalTo(@props.params.threadID)}>{(key, comment, ref) =>
+      <FirebaseList ref="commentsList" items={commentsRef.orderByChild('thread').equalTo(@props.params.threadID)}>{(key, comment) =>
         <Comment key={key} comment={comment} reference={commentsRef.child key} />
       }</FirebaseList>
 
@@ -28,6 +28,7 @@ module.exports = React.createClass
     stingyFirebase.child("projects/#{@props.project.id}/comments").push
       thread: @props.params.threadID
       content: commentContentInput.value
+      user: stingyFirebase.getAuth().uid
       timestamp: Firebase.ServerValue.TIMESTAMP
 
     stingyFirebase.child("projects/#{@props.project.id}/threads/#{@props.params.threadID}/last-update").set Firebase.ServerValue.TIMESTAMP

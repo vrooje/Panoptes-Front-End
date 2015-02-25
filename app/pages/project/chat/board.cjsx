@@ -39,11 +39,13 @@ module.exports = React.createClass
     threadRef = stingyFirebase.child("projects/#{@props.project.id}/threads").push
       board: @props.params.boardID
       name: threadNameInput.value
+      user: stingyFirebase.getAuth().uid
       timestamp: Firebase.ServerValue.TIMESTAMP
 
     stingyFirebase.child("projects/#{@props.project.id}/comments").push
       thread: threadRef.key()
       content: commentContentInput.value
+      user: stingyFirebase.getAuth().uid
       timestamp: Firebase.ServerValue.TIMESTAMP
 
     threadNameInput.value = ''
