@@ -13,8 +13,8 @@ module.exports = React.createClass
       <FirebaseList items={commentsRef.orderByChild('flagged').equalTo true}>{(key, comment) =>
         <div key={key}>
           <Comment comment={comment} reference={commentsRef.child key} />
-          <button type="button" onClick={@handleUnflag.bind this, key}>Unflag</button>
-          <button type="button" onClick={@handleDelete.bind this, key}>Delete</button>
+          <button type="button" className="major-button" onClick={@handleUnflag.bind this, key}>Unflag</button>{' '}
+          <button type="button" className="dangerous-button" onClick={@handleDelete.bind this, key}>Delete</button>
           <hr />
         </div>
       }</FirebaseList>

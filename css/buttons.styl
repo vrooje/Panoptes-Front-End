@@ -42,6 +42,14 @@
   &.active
     @extends .standard-button
 
+.dangerous-button
+  @extends .standard-button
+  background: orange
+  color: white
+
+  &:hover
+    background lighten(orange, 20%)
+
 .pill-button
   @extends $reset-button
   border: 1px solid
