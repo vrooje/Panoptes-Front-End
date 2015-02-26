@@ -13,13 +13,6 @@ module.exports = React.createClass
     comment: null
     reference: null
 
-  getInitialState: ->
-    userID: ''
-
-  componentDidMount: ->
-    if @props.comment.user
-      @bindAsObject stingyFirebase.child('users').child(@props.comment.user), 'userID'
-
   render: ->
     <div className="comment">
       {unless @props.comment.flagged
@@ -30,13 +23,12 @@ module.exports = React.createClass
           }</PromiseRenderer>
         }</ChangeListener>}
 
-      {if @state.userID
-        <PromiseRenderer promise={apiClient.type('users').get(@state.userID)}>{(user) =>
-          <div className="byline">
-            <img src={user.avatar} style={borderRadius: '50%', height: '1.5em', verticalAlign: 'middle', width: '1.5em'} />&nbsp;
-            <strong>{user.display_name}</strong> at {(new Date @props.comment.timestamp).toString()}
-          </div>
-        }</PromiseRenderer>}
+      <PromiseRenderer promise={apiClient.type('users').get(@props.comment.user)}>{(user) =>
+        <div className="byline">
+          <img src={user.avatar} style={borderRadius: '50%', height: '1.5em', verticalAlign: 'middle', width: '1.5em'} />&nbsp;
+          <strong>{user.display_name}</strong> at {(new Date @props.comment.timestamp).toString()}
+        </div>
+      }</PromiseRenderer>
 
       <Markdown>{@props.comment.content}</Markdown>
     </div>
