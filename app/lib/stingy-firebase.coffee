@@ -43,6 +43,11 @@ module.exports =
 
   getAuth: root.getAuth.bind root
 
+  increment: (path) ->
+    root.child(path).transaction (count) ->
+      count ?= 0
+      count + 1
+
   Mixin:
     mixins: [ReactFire]
 

@@ -59,8 +59,7 @@ module.exports = React.createClass
       timestamp: Firebase.ServerValue.TIMESTAMP
 
     stingyFirebase.child("projects/#{@props.project.id}/threads/#{@props.params.threadID}/last-update").set Firebase.ServerValue.TIMESTAMP
-    stingyFirebase.child("projects/#{@props.project.id}/threads/#{@props.params.threadID}/count").transaction (count) ->
-      (count ? 0) + 1
+    stingyFirebase.increment "projects/#{@props.project.id}/threads/#{@props.params.threadID}/count"
 
     commentContentInput.value = ''
     @refs.commentsList.displayAll()

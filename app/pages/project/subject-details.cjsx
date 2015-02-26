@@ -78,10 +78,10 @@ module.exports = React.createClass
       count ?= 0
       count + 1
 
-    for hashtag in contentInput.value.match /#\S+\w/g
-      stingyFirebase.child("projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags/#{hashtag.slice 1}").transaction (count) ->
-        count ?= 0
-        count + 1
+    hashtags = contentInput.value.match /#\S+\w/g
+    if hashtags?
+      for hashtag in hashtag
+        stingyFirebase.incrememnt "projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags/#{hashtag.slice 1}"
 
     contentInput.value = ''
     @refs.commentsList.displayAll()
