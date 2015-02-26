@@ -41,6 +41,7 @@ module.exports = React.createClass
       name: threadNameInput.value
       user: stingyFirebase.getAuth().uid
       timestamp: Firebase.ServerValue.TIMESTAMP
+      count: 1
 
     stingyFirebase.child("projects/#{@props.project.id}/comments").push
       thread: threadRef.key()

@@ -50,7 +50,7 @@ module.exports = React.createClass
             if user?
               <div>
                 <p><strong>Leave a comment</strong></p>
-                <form onSubmit={@handleSubmit.bind this, @props.project?.id ? @props.params.projectID, @props.params.subjectID}>
+                <form onSubmit={@handleSubmit}>
                   <textarea name="comment-content" className="standard-input full" /><br />
                   <button type="submit" className="standard-button">Save comment</button>
                 </form>
@@ -62,7 +62,7 @@ module.exports = React.createClass
       </div>
     </div>
 
-  handleSubmit: (projectID, subjectID, e) ->
+  handleSubmit: (e) ->
     e.preventDefault()
 
     contentInput = @getDOMNode().querySelector '[name="comment-content"]'
