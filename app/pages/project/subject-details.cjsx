@@ -5,6 +5,7 @@ apiClient = require '../../api/client'
 SubjectViewer = require '../../components/subject-viewer'
 FirebaseList = require '../../components/firebase-list'
 stingyFirebase = require '../../lib/stingy-firebase'
+{Link} = require 'react-router'
 Comment = require './chat/comment'
 ChangeListener = require '../../components/change-listener'
 auth = require '../../api/auth'
@@ -21,8 +22,14 @@ module.exports = React.createClass
 
     <div className="subject-details-page columns-container content-container">
       <PromiseRenderer promise={apiClient.type('subjects').get @props.params.subjectID}>{(subject) =>
-        <div className="classifier">
-          <SubjectViewer subject={subject} />
+        <div>
+          <div className="classifier">
+            <SubjectViewer subject={subject} />
+          </div>
+
+          <FirebaseList items={stingyFirebase.child "projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags"}>{(hashtag, count) =>
+            <span><Link to="project-chat-search" params={@props.params} query={q: encodeURIComponent "##{hashtag}"}>#{hashtag}</Link> </span>
+          }</FirebaseList>
         </div>
       }</PromiseRenderer>
 
@@ -61,7 +68,13 @@ module.exports = React.createClass
 
     stingyFirebase.child("projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/last-update").set Firebase.ServerValue.TIMESTAMP
     stingyFirebase.child("projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/count").transaction (count) ->
-      (count ? 0) + 1
+      count ?= 0
+      count + 1
+
+    for hashtag in contentInput.value.match /#\S+\w/g
+      stingyFirebase.child("projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags/#{hashtag.slice 1}").transaction (count) ->
+        count ?= 0
+        count + 1
 
     contentInput.value = ''
     @refs.list.displayAll()
