@@ -15,12 +15,21 @@ module.exports = React.createClass
       name: @props.project.display_name
 
     <div className="content-container">
-      Most discussed subjects<br />
+      <p><strong>Most discussed subjects</strong></p>
       <FirebaseList items={stingyFirebase.child("projects/#{@props.project.id}/subjects").orderByChild('count').limitToLast @props.howMany}>{(subjectID, {count}) =>
         linkParams = Object.create defaultLinkParams
         linkParams.subjectID = subjectID
         <div key={subjectID}>
           <Link to="subject-details" params={linkParams}>{subjectID} ({count})</Link>
+        </div>
+      }</FirebaseList>
+
+      <p><strong>Most popular threads</strong></p>
+      <FirebaseList items={stingyFirebase.child("projects/#{@props.project.id}/threads").orderByChild('count').limitToLast @props.howMany}>{(threadID, thread) =>
+        linkParams = Object.create defaultLinkParams
+        linkParams.threadID = threadID
+        <div key={threadID}>
+          <Link to="project-chat-thread" params={linkParams}>{thread.name} ({thread.count})</Link>
         </div>
       }</FirebaseList>
     </div>
