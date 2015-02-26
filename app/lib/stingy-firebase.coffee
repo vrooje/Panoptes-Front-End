@@ -4,7 +4,7 @@ ReactFire = require 'reactfire'
 
 DISCONNECT_DELAY = 2000
 
-root = new Firebase 'https://panoptes-comments.firebaseio.com'
+root = new Firebase "https://panoptes-comments.firebaseio.com/#{location.host.replace /\W+/g, '-'}"
 
 auth.listen ->
   auth.checkCurrent().then (user) ->
