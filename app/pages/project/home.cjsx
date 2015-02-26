@@ -1,5 +1,5 @@
 React = require 'react'
-FirebaseChildCounter = require '../../components/firebase-child-counter'
+stingyFirebase = require '../../lib/stingy-firebase'
 Markdown = require '../../components/markdown'
 HandlePropChanges = require '../../lib/handle-prop-changes'
 PromiseToSetState = require '../../lib/promise-to-set-state'
@@ -9,7 +9,7 @@ PromiseRenderer = require '../../components/promise-renderer'
 module.exports = React.createClass
   displayName: 'ProjectHomePage'
 
-  mixins: [HandlePropChanges, PromiseToSetState]
+  mixins: [stingyFirebase.Mixin, HandlePropChanges, PromiseToSetState]
 
   propChangeHandlers:
     project: (project) ->
@@ -26,6 +26,12 @@ module.exports = React.createClass
 
   getInitialState: ->
     workflows: []
+    classificationsCount: 0
+    volunteersCount: 0
+
+  componentDidMount: ->
+    @bindAsObject stingyFirebase.child("projects/#{@props.project.id}/classifications-count"), 'classificationsCount'
+    @bindAsObject stingyFirebase.child("projects/#{@props.project.id}/volunteers-count"), 'volunteersCount'
 
   render: ->
     linkParams =
@@ -36,8 +42,8 @@ module.exports = React.createClass
       <div className="call-to-action-container content-container">
         <Markdown className="description">{@props.project.description}</Markdown>
         <div className="stats">
-          So far <strong><FirebaseChildCounter path="/project-counters/#{@props.project.id}/classifications" /></strong> classifications
-          have been contributed by <strong><FirebaseChildCounter path="/project-counters/#{@props.project.id}/volunteers" /></strong> volunteers.
+          So far <strong>{@state.classificationsCount}</strong> classifications
+          have been contributed by <strong>{@state.volunteersCount}</strong> volunteers.
         </div>
 
         {for workflow in @state.workflows

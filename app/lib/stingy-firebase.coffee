@@ -21,11 +21,11 @@ connect = ->
     clearTimeout disconnectTimeout
   connections += 1
   if connections is 1
-    console.log 'Connecting to Firebase!'
+    console?.log 'Connecting to Firebase!'
     Firebase.goOnline()
 
 reallyDisconnect = ->
-  console.log 'Disconnecting from Firebase!'
+  console?.log 'Disconnecting from Firebase!'
   Firebase.goOffline()
   disconnectTimeout = NaN
 
@@ -44,7 +44,9 @@ module.exports =
   getAuth: root.getAuth.bind root
 
   increment: (path) ->
+    connect()
     root.child(path).transaction (count) ->
+      disconnect()
       count ?= 0
       count + 1
 

@@ -1,4 +1,3 @@
-Firebase = require 'firebase'
 React = require 'react'
 TitleMixin = require '../../lib/title-mixin'
 HandlePropChanges = require '../../lib/handle-prop-changes'
@@ -8,8 +7,7 @@ animatedScrollTo = require 'animated-scrollto'
 counterpart = require 'counterpart'
 Classifier = require '../../classifier'
 auth = require '../../api/auth'
-
-countersRef = new Firebase "https://panoptes-comments.firebaseio.com/project-counters"
+stingyFirebase = require '../../lib/stingy-firebase'
 
 SKIP_CELLECT = location.search.match(/\Wcellect=0(?:\W|$)/)?
 
@@ -146,16 +144,15 @@ module.exports = React.createClass
   handleCompletion: ->
     console?.info 'Completed classification', @state.classification
     @state.classification.save().then (classification) =>
-      console.log 'Saved'
-
-      countersRef.child("#{@props.project.id}/classifications").push classification.id
+      stingyFirebase.increment "projects/#{@props.project.id}/classifications-count"
 
       auth.checkCurrent().then (user) =>
         identifier = user?.id ? browserFingerprint
-        volunteerRef = countersRef.child "#{@props.project.id}/volunteers/#{identifier}"
-        volunteerRef.once 'value', (snap) =>
-          unless snap.val()?
-            volunteerRef.set true
+        fingerprintRef = stingyFirebase.child "projects/#{@props.project.id}/volunteer-fingerprints/#{identifier}"
+        fingerprintRef.once 'value', (snapshot) =>
+          unless snapshot.val()?
+            fingerprintRef.set true
+            stingyFirebase.increment "projects/#{@props.project.id}/volunteers-count"
 
       classification.uncache()
 
