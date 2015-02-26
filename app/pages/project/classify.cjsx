@@ -24,7 +24,7 @@ window.upcomingSubjects =
 
 browserFingerprint = localStorage.getItem 'browser-fingerprint'
 unless browserFingerprint
-  localStorage.setItem 'browser-fingerprint', "#{Date.now()}#{Math.random()}"
+  localStorage.setItem 'browser-fingerprint', "#{Date.now()}-#{Math.random()}".split('.').join ''
   browserFingerprint = localStorage.getItem 'browser-fingerprint'
 
 module.exports = React.createClass
