@@ -40,7 +40,7 @@ routes = <Route handler={App}>
       <Route name="project-chat-popular" path="popular" handler={require './pages/project/chat/popular'} />
       <Route name="project-chat-mine" path="mine" handler={require './pages/project/chat/mine'} />
       <Route name="project-chat-board" path="board/:boardID" handler={require './pages/project/chat/board'} />
-      <Route name="project-chat-thread" path="board/:boardID/:threadID" handler={require './pages/project/chat/thread'} />
+      <Route name="project-chat-thread" path="thread/:threadID" handler={require './pages/project/chat/thread'} />
       <Route name="project-chat-moderation" path="moderation" handler={require './pages/project/chat/moderation'} />
       <Route name="project-chat-search" path="search" handler={require './pages/project/chat/search-results'} />
     </Route>

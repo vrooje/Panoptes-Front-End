@@ -1,9 +1,12 @@
 .chat-comment
   background: rgba(black, 0.5)
-  border: 1px solid rgba(white, 0)
+  border: 1px solid transparent
   color: white
   border-radius: 3px
   margin: 1em 0
+
+  a > &:hover
+    border-color: rgba(white, 0.5)
 
   .controls
     float: right
