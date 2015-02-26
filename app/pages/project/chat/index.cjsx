@@ -1,8 +1,10 @@
 React = require 'react'
-{Link, RouteHandler} = require 'react-router'
+Router = {Link, RouteHandler} = require 'react-router'
 
 module.exports = React.createClass
   displayName: 'ProjectChatIndex'
+
+  mixins: [Router.Navigation]
 
   render: ->
     linkParams =
@@ -19,7 +21,15 @@ module.exports = React.createClass
         <Link to="project-chat-mine" params={linkParams} className="tabbed-content-tab">Mine</Link>
         <Link to="project-chat-board" params={helpBoardParams} className="tabbed-content-tab">Help</Link>
         <Link to="project-chat-moderation" params={linkParams} className="tabbed-content-tab">Moderation</Link>
+        <form style={display: 'inline-block'} onSubmit={@handleSubmit}>
+          <input ref="searchInput" type="search" defaultValue={@props.query?.q} />{' '}
+          <button type="submit" className="secret-button"><i className="fa fa-search fa-fw"></i></button>
+        </form>
       </nav>
 
       <RouteHandler {...@props} />
     </div>
+
+  handleSubmit: (e) ->
+    e.preventDefault()
+    @transitionTo 'project-chat-search', @props.params, q: encodeURIComponent @refs.searchInput.getDOMNode().value
