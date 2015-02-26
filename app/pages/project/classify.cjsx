@@ -49,17 +49,18 @@ module.exports = React.createClass
 
   loadClassification: (_, props = @props) ->
     console.log 'Loading classification!'
+    @promiseToSetState classification: @getCurrentWorkflowID(props).then (workflowID) =>
+      console.log 'Classification for workflow', currentClassifications.forWorkflow[workflowID]
+      currentClassifications.forWorkflow[workflowID] ?= @createNewClassification props.project, workflowID
+      currentClassifications.forWorkflow[workflowID]
+
+  getCurrentWorkflowID: (props)->
     getWorkflowID = if props.query?.workflow?
       Promise.resolve props.query.workflow
     else
       console.log 'Workflow for project', currentWorkflowForProject[props.project.id]
       currentWorkflowForProject[props.project.id] ?= @getRandomWorkflowID props.project
       currentWorkflowForProject[props.project.id]
-
-    @promiseToSetState classification: getWorkflowID.then (workflowID) =>
-      console.log 'Classification for workflow', currentClassifications.forWorkflow[workflowID]
-      currentClassifications.forWorkflow[workflowID] ?= @createNewClassification props.project, workflowID
-      currentClassifications.forWorkflow[workflowID]
 
   getRandomWorkflowID: (project) ->
     project.get('workflows').then (workflows) ->
@@ -154,10 +155,11 @@ module.exports = React.createClass
             fingerprintRef.set true
             stingyFirebase.increment "projects/#{@props.project.id}/volunteers-count"
 
-      classification.uncache()
+      console?.log 'Saved classification', classification.id
+      classification.destroy()
 
   loadAnotherSubject: ->
-    currentWorkflowForProject[@props.project.id].then (workflowID) =>
+    @getCurrentWorkflowID(@props).then (workflowID) =>
       currentClassifications.forWorkflow[workflowID] = null
       currentWorkflowForProject[@props.project.id] = null
       @loadClassification()
