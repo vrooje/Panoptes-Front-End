@@ -22,34 +22,41 @@ module.exports = React.createClass
 
     <div className="subject-details-page columns-container content-container">
       <PromiseRenderer promise={apiClient.type('subjects').get @props.params.subjectID}>{(subject) =>
-        <div>
+        <div className="column">
           <div className="classifier">
             <SubjectViewer subject={subject} />
           </div>
 
-          <FirebaseList items={stingyFirebase.child "projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags"}>{(hashtag, count) =>
-            <span><Link to="project-chat-search" params={@props.params} query={q: encodeURIComponent "##{hashtag}"}>#{hashtag}</Link> </span>
-          }</FirebaseList>
+          <p>
+            Hashtags:{' '}
+            <FirebaseList ref="hashtagsList" tag="span" items={stingyFirebase.child "projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags"} empty="None">{(hashtag, count) =>
+              <span><Link to="project-chat-search" params={@props.params} query={q: encodeURIComponent "##{hashtag}"} className="pill-button">#{hashtag}</Link> </span>
+            }</FirebaseList>
+          </p>
+          <p>Add your own by leaving a comment.</p>
         </div>
       }</PromiseRenderer>
 
-      <hr />
-
-      <div>
-        <FirebaseList ref="list" items={commentsRef.orderByChild('subject').equalTo @props.params.subjectID}>{(key, comment) =>
+      <div className="column">
+        <FirebaseList ref="commentsList" items={commentsRef.orderByChild('subject').equalTo @props.params.subjectID} empty="No comments yet">{(key, comment) =>
           unless comment.flagged
             <Comment key={key} comment={comment} reference={commentsRef.child key} />
         }</FirebaseList>
 
+        <hr />
+
         <ChangeListener target={auth}>{=>
           <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
             if user?
-              <form onSubmit={@handleSubmit.bind this, @props.project?.id ? @props.params.projectID, @props.params.subjectID}>
-                <textarea name="comment-content" /><br />
-                <button type="submit">Save comment</button>
-              </form>
+              <div>
+                <p><strong>Leave a comment</strong></p>
+                <form onSubmit={@handleSubmit.bind this, @props.project?.id ? @props.params.projectID, @props.params.subjectID}>
+                  <textarea name="comment-content" className="standard-input full" /><br />
+                  <button type="submit" className="standard-button">Save comment</button>
+                </form>
+              </div>
             else
-              <p>Sign in leave a comment</p>
+              <p><strong>Sign in leave a comment</strong></p>
           }</PromiseRenderer>
         }</ChangeListener>
       </div>
@@ -77,4 +84,4 @@ module.exports = React.createClass
         count + 1
 
     contentInput.value = ''
-    @refs.list.displayAll()
+    @refs.commentsList.displayAll()

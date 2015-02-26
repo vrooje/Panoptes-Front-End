@@ -5,7 +5,9 @@ module.exports = React.createClass
   mixins: [stingyFirebase.Mixin]
 
   getDefaultProps: ->
+    tag: 'div'
     items: null # Actually "ref" would be a better name, but it's taken.
+    empty: 'No items'
 
   getInitialState: ->
     items: {}
@@ -22,16 +24,18 @@ module.exports = React.createClass
   render: ->
     itemsKeys = Object.keys @state.items
 
-    <div className="firebase-list">
-      {for key in itemsKeys[0...@state.displayCount]
-        # We're gonna trust that the object is in order.
-        @props.children key, @state.items[key]}
+    items = if @state.displayCount is 0
+      @props.empty
 
-      {if itemsKeys.length > @state.displayCount
-        <div>
-          <button type="button" className="minor-button" onClick={@displayAll}>Load {itemsKeys.length - @state.displayCount} more</button>
-        </div>}
-    </div>
+    else
+      for key in itemsKeys[0...@state.displayCount]
+        # We're gonna trust that the object is in order.
+        @props.children key, @state.items[key]
+
+    loadMoreButton = if itemsKeys.length > @state.displayCount
+      <button type="button" className="minor-button" onClick={@displayAll}>Load {itemsKeys.length - @state.displayCount} more</button>
+
+    React.createElement @props.tag, className: 'firebase-list', {items, loadMoreButton}
 
   displayAll: ->
     @setState displayCount: @state.items.length
