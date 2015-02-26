@@ -20,6 +20,6 @@ module.exports = React.createClass
     <div className="content-container">
       <FirebaseList items={commentsRef.limitToLast @props.howMany}>{(key, comment) =>
         unless comment.flagged
-          <Comment key={key} comment={comment} reference={commentsRef.child key} />
+          <Comment key={key} comment={comment} reference={commentsRef.child key} summary />
       }</FirebaseList>
     </div>
