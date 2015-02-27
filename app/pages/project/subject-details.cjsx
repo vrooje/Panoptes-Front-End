@@ -22,7 +22,7 @@ module.exports = React.createClass
 
     <div className="subject-details-page columns-container content-container">
       <PromiseRenderer promise={apiClient.type('subjects').get @props.params.subjectID}>{(subject) =>
-        <div className="column">
+        <div className="column" style={minWidth: '20em'}>
           <div className="classifier">
             <SubjectViewer subject={subject} />
           </div>
@@ -37,7 +37,7 @@ module.exports = React.createClass
         </div>
       }</PromiseRenderer>
 
-      <div className="column">
+      <div className="column" style={minWidth: '20em'}>
         <FirebaseList ref="commentsList" items={commentsRef.orderByChild('subject').equalTo @props.params.subjectID} empty="No comments yet">{(key, comment) =>
           unless comment.flagged
             <Comment key={key} comment={comment} reference={commentsRef.child key} />
