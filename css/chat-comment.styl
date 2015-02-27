@@ -1,33 +1,86 @@
-.chat-comment
-  background: rgba(black, 0.5)
+.chat-link-to-subject
   border: 1px solid transparent
-  color: white
-  border-radius: 3px
-  margin: 1em 0
+  display: inline-block
+  margin: 0 0.7em 0.5em 0
+  position: relative
 
-  a > &:hover
+  &:hover
     border-color: rgba(white, 0.5)
 
-  .controls
-    float: right
+  .thumbnail
+    display: block
+    max-width: 20vw
+
+  .count
+    background: black
+    border: 2px solid
+    border-radius: 50%
+    color: white
     font-size: 0.7em
-    margin-right: 0.5em
-    opacity: 0.5
+    font-weight: bold
+    height: 1.4em
+    position: absolute
+    right: -0.5em
+    text-align: center
+    top: -0.5em
+    width: 1.4em
+
+.chat-comment
+  display: flex
+  margin: 1em 0
 
   .byline
-    margin: 1em
+    flex: 1
+    margin: 1em 0.5em
+    text-align: center
 
-  .timestamp
+  .avatar
+    font-size: 3em
+
+  .body
+    background: BACKGROUND
+    border-radius: 3px
+    color: FOREGROUND
+    flex: 4
+    padding: 1em 3vw
+
+  .metadata
     opacity: 0.5
 
-  .content
-    margin: 1em
-
   &[data-summary]
-    display: flex
-    flex-wrap: wrap
+    display: block
     margin: 0.3em 0
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
 
     .byline
+      display: inline-block
+      margin: 0 0.2em 0 0
+      opacity: 0.7
+
+      > p
+        display: inline
+        margin-right: 0.3em
+
+    .avatar
+      font-size: 1em
+
+    .body
+      background: transparent
+      color: inherit
+      display: inline
+      padding: 0
+
+    .metadata
+      display: inline
+      margin-right: 0.4em
+      opacity: 0.7
+
     .content
-      margin: 0.5em
+      display: inline
+      margin-right: 0.3em
+
+  a > &
+    @extends .minor-button
+    text-align: left
