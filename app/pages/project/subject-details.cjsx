@@ -80,7 +80,7 @@ module.exports = React.createClass
 
     hashtags = contentInput.value.match /#\S+\w/g
     if hashtags?
-      for hashtag in hashtag
+      for hashtag in hashtags
         stingyFirebase.incrememnt "projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags/#{hashtag.slice 1}"
 
     contentInput.value = ''
