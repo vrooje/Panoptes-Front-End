@@ -39,8 +39,7 @@ module.exports = React.createClass
 
       <div className="column" style={minWidth: '20em'}>
         <FirebaseList ref="commentsList" items={commentsRef.orderByChild('subject').equalTo @props.params.subjectID} empty="No comments yet">{(key, comment) =>
-          unless comment.flagged
-            <Comment key={key} comment={comment} reference={commentsRef.child key} />
+          <Comment key={key} comment={comment} reference={commentsRef.child key} />
         }</FirebaseList>
 
         <hr />

@@ -12,18 +12,17 @@ module.exports = React.createClass
 
     <div className="content-container">
       <FirebaseList items={commentsRef.orderByChild('user').equalTo(stingyFirebase.getAuth().uid)}>{(key, comment) =>
-        unless comment.flagged
-          linkParams = Object.create @props.params
-          linkParams.subjectID = comment.subject
-          linkParams.threadID = comment.thread
+        linkParams = Object.create @props.params
+        linkParams.subjectID = comment.subject
+        linkParams.threadID = comment.thread
 
-          linkTo = if 'subject' of comment
-            'subject-details'
-          else if 'thread' of comment
-            'project-chat-thread'
+        linkTo = if 'subject' of comment
+          'subject-details'
+        else if 'thread' of comment
+          'project-chat-thread'
 
-          <Link to={linkTo} params={linkParams} className="secret-button full">
-            <Comment key={key} comment={comment} reference={commentsRef.child key} summary />
-          </Link>
+        <Link to={linkTo} params={linkParams} className="secret-button full">
+          <Comment key={key} comment={comment} reference={commentsRef.child key} summary />
+        </Link>
       }</FirebaseList>
     </div>
