@@ -8,6 +8,7 @@ AccountBar = require './account-bar'
 LoginBar = require './login-bar'
 PromiseToSetState = require '../lib/promise-to-set-state'
 auth = require '../api/auth'
+{stargazing} = require '../api/config'
 
 counterpart.registerTranslations 'en',
   mainNav:
@@ -53,7 +54,7 @@ module.exports = React.createClass
         <Link to="projects" className="main-nav-item"><Translate content="mainNav.projects" /></Link>
         <a className="main-nav-item"><Translate content="mainNav.discuss" /></a>
         <hr />
-        {if @state.user?
+        {if @state.user? and not stargazing
           <Link to="build" className="main-nav-item"><Translate className="minor" content="mainNav.lab" /></Link>}
       </nav>
 
