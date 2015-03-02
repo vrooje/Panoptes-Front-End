@@ -17,10 +17,10 @@ body
 
 .columns-container
   display: flex
+  flex-wrap: wrap
 
   &.inline
     align-items: baseline
-    flex-wrap: wrap
 
   &.spread
     justify-content: space-between
@@ -28,7 +28,7 @@ body
   > :not(:last-child)
     margin-right: 1.5vw
 
-  > :not(hr)
+  &:not(.spread) > :not(hr)
     flex: 1 1
 
   > .column

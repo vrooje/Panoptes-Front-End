@@ -6,6 +6,8 @@ apiClient = require '../../api/client'
 animatedScrollTo = require 'animated-scrollto'
 counterpart = require 'counterpart'
 Classifier = require '../../classifier'
+auth = require '../../api/auth'
+stingyFirebase = require '../../lib/stingy-firebase'
 
 SKIP_CELLECT = location.search.match(/\Wcellect=0(?:\W|$)/)?
 
@@ -19,6 +21,11 @@ window.currentClassifications =
 
 window.upcomingSubjects =
   forWorkflow: {}
+
+browserFingerprint = localStorage.getItem 'browser-fingerprint'
+unless browserFingerprint
+  localStorage.setItem 'browser-fingerprint', "#{Date.now()}-#{Math.random()}".split('.').join ''
+  browserFingerprint = localStorage.getItem 'browser-fingerprint'
 
 module.exports = React.createClass
   displayName: 'ProjectClassifyPage'
@@ -120,7 +127,7 @@ module.exports = React.createClass
   render: ->
     <div className="classify-page content-container">
       {if @state.classification?
-        <Classifier classification={@state.classification} onLoad={@scrollIntoView} onComplete={@handleCompletion} onClickNext={@loadAnotherSubject} />
+        <Classifier {...@props} classification={@state.classification} onLoad={@scrollIntoView} onComplete={@handleCompletion} onClickNext={@loadAnotherSubject} />
       else if @state.rejected.classification?
         <code>{@state.rejected.classification.toString()}</code>
       else
@@ -138,6 +145,16 @@ module.exports = React.createClass
   handleCompletion: ->
     console?.info 'Completed classification', @state.classification
     @state.classification.save().then (classification) =>
+      stingyFirebase.increment "projects/#{@props.project.id}/classifications-count"
+
+      auth.checkCurrent().then (user) =>
+        identifier = user?.id ? browserFingerprint
+        fingerprintRef = stingyFirebase.child "projects/#{@props.project.id}/volunteer-fingerprints/#{identifier}"
+        fingerprintRef.once 'value', (snapshot) =>
+          unless snapshot.val()?
+            fingerprintRef.set true
+            stingyFirebase.increment "projects/#{@props.project.id}/volunteers-count"
+
       console?.log 'Saved classification', classification.id
       classification.destroy()
 

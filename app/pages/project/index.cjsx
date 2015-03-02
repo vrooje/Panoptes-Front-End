@@ -70,7 +70,7 @@ ProjectPage = React.createClass
               <Link to="project-education" params={params} className="tabbed-content-tab">
                 <Translate content="project.nav.education" />
               </Link>}
-            <Link to="project-talk" params={params} className="tabbed-content-tab">
+            <Link to="project-chat-recent" params={params} className="tabbed-content-tab">
               <Translate content="project.nav.discuss" />
             </Link>
           </nav>
@@ -116,7 +116,7 @@ module.exports = React.createClass
 
   render: ->
     if @state.project?
-      <ProjectPage project={@state.project} />
+      <ProjectPage {...@props} project={@state.project} />
     else
       <div className="content-container">
         {if @state.rejected.project?
