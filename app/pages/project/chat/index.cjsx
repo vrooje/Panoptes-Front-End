@@ -1,10 +1,20 @@
 React = require 'react'
 Router = {Link, RouteHandler} = require 'react-router'
+stingyFirebase = require '../../../lib/stingy-firebase'
+ChangeListener = require '../../../components/change-listener'
+auth = require '../../../api/auth'
+PromiseRenderer = require '../../../components/promise-renderer'
 
 module.exports = React.createClass
   displayName: 'ProjectChatIndex'
 
-  mixins: [Router.Navigation]
+  mixins: [Router.Navigation, stingyFirebase.Mixin]
+
+  getInitialState: ->
+    mods: {}
+
+  componentDidMount: ->
+    @bindAsObject stingyFirebase.child("projects/#{@props.project.id}/mods"), 'mods'
 
   render: ->
     linkParams =
@@ -20,7 +30,13 @@ module.exports = React.createClass
         <Link to="project-chat-popular" params={linkParams} className="tabbed-content-tab">Popular</Link>
         <Link to="project-chat-mine" params={linkParams} className="tabbed-content-tab">Mine</Link>
         <Link to="project-chat-board" params={helpBoardParams} className="tabbed-content-tab">Help</Link>
-        <Link to="project-chat-moderation" params={linkParams} className="tabbed-content-tab">Moderation</Link>
+        <ChangeListener target={auth}>{=>
+          <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
+            if user?.id of @state.mods
+              <Link to="project-chat-moderation" params={linkParams} className="tabbed-content-tab">Moderation</Link>
+          }</PromiseRenderer>
+        }</ChangeListener>
+
         <form style={display: 'inline-block'} onSubmit={@handleSubmit}>
           <input ref="searchInput" type="search" defaultValue={@props.query?.q} />{' '}
           <button type="submit" className="secret-button"><i className="fa fa-search fa-fw"></i></button>
