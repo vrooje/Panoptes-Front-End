@@ -5,6 +5,7 @@ HandlePropChanges = require '../../lib/handle-prop-changes'
 PromiseToSetState = require '../../lib/promise-to-set-state'
 PromiseRenderer = require '../../components/promise-renderer'
 {Link} = require 'react-router'
+ProgressWheel = require '../../components/progress-wheel'
 
 getWorkflowCompleteness = (workflow) ->
   total = 0
@@ -73,12 +74,13 @@ module.exports = React.createClass
             <Link to="project-classify" params={linkParams} query={workflow: workflow.id} className="call-to-action standard-button">
               {workflow.display_name}
             </Link>{' '}
-            <PromiseRenderer promise={getWorkflowCompleteness workflow}>{(completeness) =>
-              <span className="form-help">{Math.floor completeness * 100}% complete</span>
+            <PromiseRenderer tag="span" promise={getWorkflowCompleteness workflow}>{(completeness) =>
+              <ProgressWheel value={completeness} title="#{Math.floor completeness * 100}% complete" />
             }</PromiseRenderer>
           </span>}
+
           <PromiseRenderer promise={getProjectCompleteness @props.project}>{(completeness) =>
-            <p className="form-help">Overall: {Math.floor completeness * 100}% complete</p>
+            <p className="form-help">Project: {Math.floor completeness * 100}% complete <ProgressWheel value={completeness} /></p>
           }</PromiseRenderer>
       </div>
 
