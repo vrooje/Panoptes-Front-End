@@ -6,6 +6,28 @@ PromiseToSetState = require '../../lib/promise-to-set-state'
 PromiseRenderer = require '../../components/promise-renderer'
 {Link} = require 'react-router'
 
+getWorkflowCompleteness = (workflow) ->
+  total = 0
+  retired = 0
+  workflow.get('subject_sets').then (subjectSets) ->
+    for subjectSet in subjectSets
+      total += subjectSet.set_member_subjects_count
+      retired += subjectSet.retired_set_member_subjects_count
+    retired / total
+
+getProjectCompleteness = (project) ->
+  total = 0
+  retired = 0
+  project.get('workflows').then (workflows) ->
+    workflowCounts = for workflow in workflows
+      workflow.get('subject_sets').then (subjectSets) ->
+        for subjectSet in subjectSets
+          total += subjectSet.set_member_subjects_count
+          retired += subjectSet.retired_set_member_subjects_count
+        retired / total
+    Promise.all(workflowCounts).then ->
+      retired / total
+
 module.exports = React.createClass
   displayName: 'ProjectHomePage'
 
@@ -47,9 +69,17 @@ module.exports = React.createClass
         </div>
 
         {for workflow in @state.workflows
-          <Link to="project-classify" params={linkParams} query={workflow: workflow.id} key={workflow.id} className="call-to-action standard-button">
-            {workflow.display_name}
-          </Link>}
+          <span key={workflow.id}>
+            <Link to="project-classify" params={linkParams} query={workflow: workflow.id} className="call-to-action standard-button">
+              {workflow.display_name}
+            </Link>{' '}
+            <PromiseRenderer promise={getWorkflowCompleteness workflow}>{(completeness) =>
+              <span className="form-help">{Math.floor completeness * 100}% complete</span>
+            }</PromiseRenderer>
+          </span>}
+          <PromiseRenderer promise={getProjectCompleteness @props.project}>{(completeness) =>
+            <p className="form-help">Overall: {Math.floor completeness * 100}% complete</p>
+          }</PromiseRenderer>
       </div>
 
       <hr />
