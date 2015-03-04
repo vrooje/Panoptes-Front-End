@@ -11,7 +11,7 @@ module.exports = React.createClass
   mixins: [Router.Navigation, stingyFirebase.Mixin]
 
   getInitialState: ->
-    mods: {}
+    mods: null
 
   componentDidMount: ->
     @bindAsObject stingyFirebase.child("projects/#{@props.project.id}/mods"), 'mods'
@@ -32,7 +32,7 @@ module.exports = React.createClass
         <Link to="project-chat-board" params={helpBoardParams} className="tabbed-content-tab">Help</Link>
         <ChangeListener target={auth}>{=>
           <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
-            if user?.id of @state.mods
+            if @state.mods? and user?.id of @state.mods
               <Link to="project-chat-moderation" params={linkParams} className="tabbed-content-tab">Moderation</Link>
           }</PromiseRenderer>
         }</ChangeListener>
