@@ -39,6 +39,8 @@ disconnect = ->
 Firebase.goOffline() # Start offline.
 
 module.exports =
+  root: root
+
   child: root.child.bind root
 
   getAuth: root.getAuth.bind root
