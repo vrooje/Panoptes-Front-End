@@ -65,7 +65,7 @@ module.exports = React.createClass
       <div className="call-to-action-container content-container">
         <Markdown className="description">{@props.project.description}</Markdown>
         <div className="stats">
-          So far <strong>{@state.classificationsCount}</strong> classifications
+          So far <strong>{@state.classificationsCount || 'no'}</strong> classifications
           have been contributed by <strong>{@state.volunteersCount}</strong> volunteers.
         </div>
 

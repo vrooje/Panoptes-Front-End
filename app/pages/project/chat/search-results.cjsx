@@ -5,6 +5,8 @@ PromiseRenderer = require '../../../components/promise-renderer'
 {Link} = require 'react-router'
 Comment = require './comment'
 
+SEARCH_TIMEOUT = 1500
+
 searchRoot = stingyFirebase.root.parent().child 'search'
 
 module.exports = React.createClass
@@ -14,6 +16,7 @@ module.exports = React.createClass
 
   getInitialState: ->
     results: null
+    searchTimeout: NaN
 
   componentDidMount: ->
     @openSearchFor @props.query.q
@@ -23,16 +26,22 @@ module.exports = React.createClass
       @openSearchFor nextProps.query.q
 
   openSearchFor: (query) ->
-    requestRef = searchRoot.child('request').push
-      index: 'demo_comments'
-      query: query_string: {query}
-      type: 'comment'
+    results = null
 
-    searchRoot.child("response/#{requestRef.key()}/hits/hits").on 'value', @handleResults
+    searchTimeout = setTimeout (=> @setState results: []), SEARCH_TIMEOUT
+
+    @setState {results, searchTimeout}, =>
+      requestRef = searchRoot.child('request').push
+        index: 'demo_comments'
+        query: query_string: {query}
+        type: 'comment'
+
+      searchRoot.child("response/#{requestRef.key()}/hits/hits").on 'value', @handleResults
 
   handleResults: (snap) ->
     results = snap.val()
     if results?
+      clearTimeout @state.searchTimeout
       snap.ref().parent().parent().remove()
       @setState {results}
 
