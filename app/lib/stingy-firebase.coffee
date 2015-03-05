@@ -1,10 +1,12 @@
 auth = require '../api/auth'
 Firebase = require 'firebase'
+{makeHTTPRequest} = require 'json-api-client'
 ReactFire = require 'reactfire'
 
 DISCONNECT_DELAY = 2000
 
-root = new Firebase "https://panoptes-comments.firebaseio.com/#{location.host.replace /\W+/g, '-'}"
+rootPath = "https://panoptes-comments.firebaseio.com/#{location.host.replace /\W+/g, '-'}"
+root = new Firebase rootPath
 
 auth.listen ->
   auth.checkCurrent().then (user) ->
@@ -52,6 +54,9 @@ module.exports =
       count ?= 0
       count + 1
 
+  get: (path) ->
+    makeHTTPRequest 'GET', "#{rootPath}/#{path}.json", null, null, (request) -> request.withCredentials = false
+
   Mixin:
     mixins: [ReactFire]
 
@@ -60,3 +65,5 @@ module.exports =
 
     componentWillUnmount: ->
       disconnect()
+
+window.sfb = module.exports
