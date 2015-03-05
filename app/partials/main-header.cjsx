@@ -49,14 +49,15 @@ module.exports = React.createClass
           <LoginBar />}
       </div>
 
-      <nav className="main-nav">
-        <Link to="about" className="main-nav-item"><Translate content="mainNav.about" /></Link>
-        <Link to="projects" className="main-nav-item"><Translate content="mainNav.projects" /></Link>
-        <a className="main-nav-item"><Translate content="mainNav.discuss" /></a>
-        <hr />
-        {if @state.user? and not stargazing
-          <Link to="build" className="main-nav-item"><Translate className="minor" content="mainNav.lab" /></Link>}
-      </nav>
+      {unless stargazing
+        <nav className="main-nav">
+          <Link to="about" className="main-nav-item"><Translate content="mainNav.about" /></Link>
+          <Link to="projects" className="main-nav-item"><Translate content="mainNav.projects" /></Link>
+          <a className="main-nav-item"><Translate content="mainNav.discuss" /></a>
+          <hr />
+          {if @state.user? and not stargazing
+            <Link to="build" className="main-nav-item"><Translate className="minor" content="mainNav.lab" /></Link>}
+        </nav>}
 
       <div className="main-header-group"></div>
     </header>
