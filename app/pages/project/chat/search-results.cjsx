@@ -56,7 +56,7 @@ module.exports = React.createClass
                   'project-chat-thread'
 
                 <Link to={linkTo} params={linkParams} className="secret-button full">
-                  <Comment comment={comment} reference={commentsRef.child key} summary />
+                  <Comment comment={comment} reference={commentsRef.child result._id} summary />
                 </Link>
               else
                 null
