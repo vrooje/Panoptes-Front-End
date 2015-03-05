@@ -23,14 +23,18 @@ module.exports = React.createClass
       @openSearchFor nextProps.query.q
 
   openSearchFor: (query) ->
-    try @unbind 'results'
-
     requestRef = searchRoot.child('request').push
       index: 'demo_comments'
       query: query_string: {query}
       type: 'comment'
 
-    @bindAsArray searchRoot.child("response/#{requestRef.key()}/hits/hits"), 'results'
+    searchRoot.child("response/#{requestRef.key()}/hits/hits").on 'value', @handleResults
+
+  handleResults: (snap) ->
+    results = snap.val()
+    if results?
+      snap.ref().parent().parent().remove()
+      @setState {results}
 
   render: ->
     commentsRef = stingyFirebase.child "projects/#{@props.project.id}/comments"
@@ -59,7 +63,7 @@ module.exports = React.createClass
                   <Comment comment={comment} reference={commentsRef.child result._id} summary />
                 </Link>
               else
-                null
+                <span className="form-help warning">Missing comment</span>
             }</PromiseRenderer>
       else
         <span>Searching...</span>}
