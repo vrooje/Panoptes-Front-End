@@ -40,6 +40,7 @@ module.exports = React.createClass
   mixins: [PromiseToSetState]
 
   getInitialState: ->
+    serverError: null
     whyRealName: false
     user: null
     badNameChars: null
@@ -167,12 +168,14 @@ module.exports = React.createClass
             <Translate content="registerForm.alreadySignedIn" name={@state.user.display_name} />{' '}
             <button type="button" className="minor-button" onClick={@handleSignOut}><Translate content="registerForm.signOut" /></button>
           </span>
+        else if @state.serverError
+          <span className="form-help error">{@state.serverError.toString()}</span>
         else
           <span>&nbsp;</span>}
       </p>
 
       <div>
-        <button type="submit" className="standard-button full" disabled={not @isFormValid() or Object.keys(@state.pending).length isnt 0 or @state.user?}>
+        <button type="submit" className="standard-button full" disabled={@state.serverError? or not @isFormValid() or Object.keys(@state.pending).length isnt 0 or @state.user?}>
           <Translate content="registerForm.register" />
         </button>
       </div>
@@ -185,17 +188,24 @@ module.exports = React.createClass
     badChars = (char for char in name.split('') when char isnt encodeURIComponent char)
 
     @setState
+      serverError: null
       badNameChars: badChars
       nameConflict: null
 
     if exists and badChars.length is 0
-      @debouncedCheckFornameConflict ?= debounce @checkFornameConflict, REMOTE_CHECK_DELAY
-      @debouncedCheckFornameConflict name
+      @debouncedCheckForDisplayNameConflict ?= debounce @checkFornameConflict, REMOTE_CHECK_DELAY
+      @debouncedCheckForDisplayNameConflict name
 
-  debouncedCheckFornameConflict: null
+  debouncedCheckForDisplayNameConflict: null
   checkFornameConflict: (display_name) ->
-    @promiseToSetState nameConflict: apiClient.type('users').get({display_name}).then (users) ->
-      users.length isnt 0
+    nameConflict = apiClient.type('users').get({display_name})
+      .catch (serverError) =>
+        @setState {serverError}
+        null
+      .then (users) ->
+        users.length isnt 0
+
+    @promiseToSetState {nameConflict}
 
   handlePasswordChange: ->
     password = @refs.password.getDOMNode().value
@@ -223,18 +233,29 @@ module.exports = React.createClass
     # TODO: Is there a nicer way to check for email availability?
     # This request will always throw because there's no login or password.
     # We're only concerned with the existence of any "email" error.
-    @promiseToSetState emailConflict: auth._getAuthToken().then (token) ->
-      data =
-        authenticity_token: token
-        user: {email}
 
-      headers =
-        'Content-Type': 'application/json'
-        'Accept': 'application/json'
+    emailConflict = auth._getAuthToken()
+      .then (token) ->
+        data =
+          authenticity_token: token
+          user: {email}
 
-      apiClient.post '/../users', data, headers
-        .catch (error) ->
-          error.message.match(/email(.+)taken/mi) ? false
+        headers =
+          'Content-Type': 'application/json'
+          'Accept': 'application/json'
+
+        apiClient.post '/../users', data, headers
+
+      .catch (error) =>
+        if error.message.match /email(.+)taken/mi
+          true
+        else if error.message.match /name(.+)blank/mi
+          false
+        else
+          @setState serverError: error
+          null
+
+    @promiseToSetState {emailConflict}
 
   isFormValid: ->
     {badNameChars, nameConflict, passwordsDontMatch, emailConflict} = @state
