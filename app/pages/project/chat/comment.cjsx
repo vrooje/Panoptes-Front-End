@@ -35,7 +35,15 @@ module.exports = React.createClass
 
       <div className="body">
         <div className="metadata columns-container inline spread">
-          <time className="timestamp" title={moment(@props.comment.timestamp).format 'llll'}>{moment(@props.comment.timestamp).fromNow()}</time>
+          <span>
+            <time className="timestamp" title={moment(@props.comment.timestamp).format 'llll'}>{moment(@props.comment.timestamp).fromNow()}</time>
+
+            {if @props.summary
+              if @props.comment.subject?
+                <i className="fa fa-picture-o fa-fw"></i>
+              else if @props.comment.thread?
+                <i className="fa fa-comments fa-fw"></i>}
+          </span>
 
           {unless @props.summary or @props.comment.flagged?
             <ChangeListener target={auth}>{=>
