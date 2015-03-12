@@ -24,4 +24,4 @@ env = envFromBrowser ? envFromShell ? DEFAULT_ENV
 module.exports =
   host: hostFromBrowser ? hostFromShell ? API_HOSTS[env]
   clientAppID: appFromBrowser ? appFromShell ? API_APPLICATION_IDS[env]
-  stargazing: location.href.match(/stargazing/)?
+  stargazing: location?.href.match(/stargazing/)?
