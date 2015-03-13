@@ -62,29 +62,49 @@ module.exports = React.createClass
       name: @props.project.display_name
 
     <div className="project-home-page">
-      <div className="call-to-action-container content-container">
-        <Markdown className="description">{@props.project.description}</Markdown>
-        <div className="stats">
-          So far <strong>{@state.classificationsCount || 'no'}</strong> classifications
-          have been contributed by <strong>{@state.volunteersCount}</strong> volunteers.
+      <div className="call-to-action content-container">
+        <p className="description">{@props.project.description}</p>
+
+        <div>
+          {for workflow in @state.workflows
+            <span key={workflow.id}>
+              <Link to="project-classify" params={linkParams} query={workflow: workflow.id} className="standard-button">
+                {workflow.display_name}
+              </Link>&emsp;
+            </span>}
         </div>
-
-        {for workflow in @state.workflows
-          <span key={workflow.id}>
-            <Link to="project-classify" params={linkParams} query={workflow: workflow.id} className="call-to-action standard-button">
-              {workflow.display_name}
-            </Link>{' '}
-            <PromiseRenderer tag="span" promise={getWorkflowCompleteness workflow}>{(completeness) =>
-              <ProgressWheel value={completeness} title="#{Math.floor completeness * 100}% complete" />
-            }</PromiseRenderer>
-          </span>}
-
-          <PromiseRenderer promise={getProjectCompleteness @props.project}>{(completeness) =>
-            <p className="form-help">Project: {Math.floor completeness * 100}% complete <ProgressWheel value={completeness} /></p>
-          }</PromiseRenderer>
       </div>
 
-      <hr />
+      <div>
+        <hr />
 
-      <Markdown className="introduction content-container">{@props.project.introduction}</Markdown>
+        <div className="project-stats">
+          <div className="stat">
+            <div className="label">Volunteers</div>
+            <div className="value">{@state.volunteersCount ? 0}</div>
+          </div>
+          <div className="stat">
+            <div className="label">Classifications</div>
+            <div className="value">{@state.classificationsCount ? 0}</div>
+          </div>
+          <div className="stat">
+            <div className="label">Total subjects</div>
+            <div className="value">{@props.project.subjects_count}</div>
+          </div>
+          <div className="stat">
+            <div className="label">Subjects completed</div>
+            <div className="value">{@props.project.retired_subjects_count}</div>
+          </div>
+          <div className="stat">
+            <div className="label">Project completion</div>
+            <div className="value">{Math.round @props.project.retired_subjects_count / @props.project.subjects_count * 100}%</div>
+          </div>
+        </div>
+
+        <hr />
+
+        <div className="content-container">
+          <Markdown className="introduction">{@props.project.introduction}</Markdown>
+        </div>
+      </div>
     </div>
