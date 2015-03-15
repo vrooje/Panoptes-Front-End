@@ -14,6 +14,8 @@ SKIP_CELLECT = location.search.match(/\Wcellect=0(?:\W|$)/)?
 if SKIP_CELLECT
   console?.warn 'Intelligent subject selection disabled'
 
+
+
 # Map each project ID to a promise of its last randomly-selected workflow ID.
 # This is to maintain the same random workflow for each project when none is specified by the user.
 currentWorkflowForProject = {}
@@ -130,13 +132,19 @@ module.exports = React.createClass
     # If there aren't any left (or there weren't any to begin with), refill the list.
     if upcomingSubjects.forWorkflow[workflow.id].length is 0
       # console.log 'Fetching subjects'
-      subjectQuery =
-        project_id: project.id
-        workflow_id: workflow.id
-        sort: 'cellect' unless SKIP_CELLECT
+      fetchSubjects = stingyFirebase.get "projects/#{@props.project.id}/subject-id-range"
+        .then ({start, end} = {}) ->
+          if start? and end?
+            randomIDs = ("#{Math.floor Math.random() * (end - start) + start}" for i in [0...5])
+            apiClient.type('subjects').get randomIDs
 
-      # TODO: If something goes wrong (Cellect is down, etc.), pull a list of subject from somewhere else.
-      fetchSubjects = apiClient.type('subjects').get subjectQuery
+          else
+            subjectQuery =
+              project_id: project.id
+              workflow_id: workflow.id
+              sort: 'cellect' unless SKIP_CELLECT
+            apiClient.type('subjects').get subjectQuery
+
         .then (subjects) ->
           upcomingSubjects.forWorkflow[workflow.id].push subjects...
 
