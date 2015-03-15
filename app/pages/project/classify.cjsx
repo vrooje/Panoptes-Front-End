@@ -188,11 +188,12 @@ module.exports = React.createClass
 
       auth.checkCurrent().then (user) =>
         identifier = user?.id ? browserFingerprint
-        fingerprintRef = stingyFirebase.child "projects/#{@props.project.id}/volunteer-fingerprints/#{identifier}"
-        fingerprintRef.once 'value', (snapshot) =>
-          unless snapshot.val()?
-            fingerprintRef.set true
-            stingyFirebase.increment "projects/#{@props.project.id}/volunteers-count"
+        volunteerPath = "projects/#{@props.project.id}/volunteer-fingerprints/#{identifier}"
+        stingyFirebase.get volunteerPath
+          .then (alreadyRecorded) =>
+            unless alreadyRecorded?
+              stingyFirebase.increment volunteerPath
+              stingyFirebase.increment "projects/#{@props.project.id}/volunteers-count"
 
       console?.log 'Saved classification', classification.id
       # After saving, remove the classification resource from the local cache.
