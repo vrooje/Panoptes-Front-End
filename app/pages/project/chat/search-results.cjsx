@@ -53,11 +53,11 @@ module.exports = React.createClass
         if @state.results.length is 0
           <span className="form-help">No results</span>
         else
-          console.log 'Results', @state.results
+          # console.log 'Results', @state.results
           for result in @state.results
             <PromiseRenderer key={result._id} promise={stingyFirebase.get "projects/#{@props.project.id}/comments/#{result._id}"}>{(request) =>
               comment = JSON.parse request.responseText
-              console.log 'Comment', comment
+              # console.log 'Comment', comment
               if comment?
                 linkParams = Object.create @props.params
                 linkParams.subjectID = comment.subject

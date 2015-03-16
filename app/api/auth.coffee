@@ -182,5 +182,5 @@ module.exports = new Model
 
 # For quick debugging:
 window?.zooAuth = module.exports
-window?.log = console?.info.bind console, 'LOG'
-window?.err = console?.error.bind console, 'ERR'
+window?.log = console?.info.bind? console, 'LOG'
+window?.err = console?.error.bind? console, 'ERR'
