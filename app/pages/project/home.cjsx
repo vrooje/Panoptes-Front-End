@@ -76,8 +76,6 @@ module.exports = React.createClass
       </div>
 
       <div>
-        <hr />
-
         <div className="project-stats">
           <div className="stat">
             <div className="label">Volunteers</div>
@@ -101,10 +99,8 @@ module.exports = React.createClass
           </div>
         </div>
 
-        <hr />
-
-        <div className="content-container">
-          <Markdown className="introduction">{@props.project.introduction}</Markdown>
+        <div className="introduction">
+          <Markdown className="content-container">{@props.project.introduction}</Markdown>
         </div>
       </div>
     </div>
