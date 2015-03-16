@@ -31,7 +31,7 @@ if stargazing
       </div>
 
 routes = <Route handler={App}>
-  <DefaultRoute name="home" handler={if stargazing then redirect 'project-home', owner: 'zooniverse-beta', name: 'Supernovae' else require './pages/home'} />
+  <DefaultRoute name="home" handler={if stargazing then redirect 'project-home', owner: 'zooniverse-beta', name: 'Snapshot Supernova' else require './pages/home'} />
   <Route name="about" handler={redirect 'https://www.zooniverse.org/about'} />
 
   <Route name="settings" handler={if stargazing then redirect 'https://www.zooniverse.org/account/settings' else require './pages/settings'} />
