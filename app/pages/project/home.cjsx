@@ -6,6 +6,7 @@ PromiseToSetState = require '../../lib/promise-to-set-state'
 PromiseRenderer = require '../../components/promise-renderer'
 {Link} = require 'react-router'
 ProgressWheel = require '../../components/progress-wheel'
+grouper = require 'number-grouper'
 
 getWorkflowCompleteness = (workflow) ->
   total = 0
@@ -79,19 +80,19 @@ module.exports = React.createClass
         <div className="project-stats">
           <div className="stat">
             <div className="label">Volunteers</div>
-            <div className="value">{@state.volunteersCount ? 0}</div>
+            <div className="value">{grouper @state.volunteersCount ? 0}</div>
           </div>
           <div className="stat">
             <div className="label">Classifications</div>
-            <div className="value">{@state.classificationsCount ? 0}</div>
+            <div className="value">{grouper @state.classificationsCount ? 0}</div>
           </div>
           <div className="stat">
             <div className="label">Total subjects</div>
-            <div className="value">{@props.project.subjects_count}</div>
+            <div className="value">{grouper @props.project.subjects_count}</div>
           </div>
           <div className="stat">
             <div className="label">Subjects completed</div>
-            <div className="value">{@props.project.retired_subjects_count}</div>
+            <div className="value">{grouper @props.project.retired_subjects_count}</div>
           </div>
           <div className="stat">
             <div className="label">Project completion</div>
