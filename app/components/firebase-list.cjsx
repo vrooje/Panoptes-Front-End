@@ -7,6 +7,7 @@ module.exports = React.createClass
   getDefaultProps: ->
     tag: 'div'
     items: null # Actually "ref" would be a better name, but it's taken.
+    reverse: false
     empty: 'No items'
 
   getInitialState: ->
@@ -23,6 +24,8 @@ module.exports = React.createClass
 
   render: ->
     itemsKeys = Object.keys @state.items
+    if @props.reverse
+      itemsKeys.reverse()
 
     items = if @state.displayCount is 0
       @props.empty

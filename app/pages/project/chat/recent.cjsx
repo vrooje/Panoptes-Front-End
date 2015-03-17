@@ -19,7 +19,7 @@ module.exports = React.createClass
     commentsRef = stingyFirebase.child "projects/#{@props.project.id}/comments"
 
     <div className="content-container">
-      <FirebaseList items={commentsRef.limitToLast @props.howMany}>{(key, comment) =>
+      <FirebaseList items={commentsRef.limitToLast @props.howMany} reverse>{(key, comment) =>
         linkParams = Object.create @props.params
         linkParams.subjectID = comment.subject
         linkParams.threadID = comment.thread
