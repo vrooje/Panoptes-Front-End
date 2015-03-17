@@ -132,10 +132,10 @@ module.exports = React.createClass
     # If there aren't any left (or there weren't any to begin with), refill the list.
     if upcomingSubjects.forWorkflow[workflow.id].length is 0
       # console.log 'Fetching subjects'
-      fetchSubjects = stingyFirebase.get "projects/#{@props.project.id}/subject-id-range"
-        .then ({start, end} = {}) =>
-          if start? and end?
-            randomIDs = ("#{Math.floor Math.random() * (end - start) + start}" for i in [0...5])
+      fetchSubjects = stingyFirebase.get "projects/#{@props.project.id}/override-subject-selection"
+        .then (overrides = {}) =>
+          if overrides.start and overrides.end
+            randomIDs = ("#{Math.floor Math.random() * (overrides.end - overrides.start) + overrides.start}" for i in [0...5])
             apiClient.type('subjects').get randomIDs
 
           else
@@ -144,8 +144,8 @@ module.exports = React.createClass
                 apiClient.type('subjects').get
                   project_id: project.id
                   workflow_id: workflow.id
-                  subject_set_id: subjectSetID if subjectSetID?
-                  sort: 'cellect' unless SKIP_CELLECT
+                  subject_set_id: overrides['subject-set'] || null
+                  sort: 'cellect' unless SKIP_CELLECT or overrides['skip-cellect']
 
         .then (subjects) ->
           upcomingSubjects.forWorkflow[workflow.id].push subjects...
