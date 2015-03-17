@@ -50,8 +50,11 @@ module.exports =
   increment: (path) ->
     connect()
     root.child(path).transaction (count) ->
-      disconnect()
-      count ?= 0
+      if count?
+        disconnect()
+      else
+        count = 0
+
       count + 1
 
   get: (path) ->
