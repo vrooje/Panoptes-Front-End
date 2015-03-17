@@ -70,7 +70,7 @@ routes = <Route handler={App}>
     <Route name="new-project-workflow" path="workflow" handler={if stargazing then ComingSoon else require './pages/new-project/workflow'} />
     <Route name="new-project-review" path="review" handler={if stargazing then ComingSoon else require './pages/new-project/review'} />
   </Route>}
-  <Route name="edit-project" path="edit-project/:id" handler={if stargazing then ComingSoon else require './pages/edit-project'} />
+  <Route name="edit-project" path="edit-project/:id" handler={ require './pages/edit-project'} />
   <Route name="edit-workflow" path="edit-workflow/:id" handler={if stargazing then ComingSoon else require './pages/edit-workflow'} />
 
   <Route path="todo/?*" handler={React.createClass render: -> <div className="content-container"><i className="fa fa-cogs"></i> TODO</div>} />

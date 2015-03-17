@@ -4,9 +4,7 @@ PromiseToSetState = require '../lib/promise-to-set-state'
 ChangeListener = require '../components/change-listener'
 auth = require '../api/auth'
 PromiseRenderer = require '../components/promise-renderer'
-InPlaceForm = require '../components/in-place-form'
 handleInputChange = require '../lib/handle-input-change'
-MarkdownEditor = require '../components/markdown-editor'
 {Link} = require 'react-router'
 apiClient = require '../api/client'
 
@@ -37,27 +35,27 @@ ProjectEditPage = React.createClass
     <PromiseRenderer promise={currentAndOwner}>{([currentUser, projectOwner] = []) =>
       if projectOwner? and currentUser is projectOwner
         <ChangeListener target={@props.project}>{=>
-          <InPlaceForm onSubmit={@handleSubmit}>
+          <form className="content-container" onSubmit={@handleSubmit}>
             Name<br />
-            <input type="text" name="display_name" value={@props.project.display_name} onChange={handleProjectChange} /><br />
+            <input type="text" name="display_name" value={@props.project.display_name} className="standard-input" onChange={handleProjectChange} /><br />
 
             Description<br />
-            <MarkdownEditor name="description" value={@props.project.description} onChange={handleProjectChange} /><br />
+            <textarea name="description" value={@props.project.description} rows="10" className="standard-input full" onChange={handleProjectChange} /><br />
 
             Introduction<br />
-            <MarkdownEditor name="introduction" value={@props.project.introduction} onChange={handleProjectChange} /><br />
+            <textarea name="introduction" value={@props.project.introduction} rows="10" className="standard-input full" onChange={handleProjectChange} /><br />
 
             Science case<br />
-            <MarkdownEditor name="science_case" value={@props.project.science_case} onChange={handleProjectChange} /><br />
+            <textarea name="science_case" value={@props.project.science_case} rows="10" className="standard-input full" onChange={handleProjectChange} /><br />
 
             Results<br />
-            <MarkdownEditor name="result" value={@props.project.result} onChange={handleProjectChange} /><br />
+            <textarea name="result" value={@props.project.result} rows="10" className="standard-input full" onChange={handleProjectChange} /><br />
 
             FAQ<br />
-            <MarkdownEditor name="faq" value={@props.project.faq} onChange={handleProjectChange} /><br />
+            <textarea name="faq" value={@props.project.faq} rows="10" className="standard-input full" onChange={handleProjectChange} /><br />
 
             Education resources<br />
-            <MarkdownEditor name="education_content" value={@props.project.education_content} onChange={handleProjectChange} /><br />
+            <textarea name="education_content" value={@props.project.education_content} rows="10" className="standard-input full" onChange={handleProjectChange} /><br />
 
             Workflows<br />
             <ul>
@@ -72,20 +70,21 @@ ProjectEditPage = React.createClass
 
             <p>
               <label>
-                <input type="checkbox" name="private" checked={@props.project.private} onChange={handleProjectChange} /> Private
+                <input disabled="for-stargazing" type="checkbox" name="private" checked={@props.project.private} onChange={handleProjectChange} /> Private
               </label>
             </p>
 
             <button type="submit" disabled={@state.busy or not @props.project.hasUnsavedChanges()}>Save</button><br />
-            <button type="button" onClick={@handleDelete}>Delete this project</button><br />
-          </InPlaceForm>
+            <button disabled="for-stargazing" type="button" onClick={@handleDelete}>Delete this project</button><br />
+          </form>
         }</ChangeListener>
 
       else
         <p>Checking permissions</p>
     }</PromiseRenderer>
 
-  handleSubmit: ->
+  handleSubmit: (e) ->
+    e.preventDefault()
     @setState busy: true
     @props.project.save().then =>
       @setState busy: false
