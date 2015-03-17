@@ -133,17 +133,19 @@ module.exports = React.createClass
     if upcomingSubjects.forWorkflow[workflow.id].length is 0
       # console.log 'Fetching subjects'
       fetchSubjects = stingyFirebase.get "projects/#{@props.project.id}/subject-id-range"
-        .then ({start, end} = {}) ->
+        .then ({start, end} = {}) =>
           if start? and end?
             randomIDs = ("#{Math.floor Math.random() * (end - start) + start}" for i in [0...5])
             apiClient.type('subjects').get randomIDs
 
           else
-            subjectQuery =
-              project_id: project.id
-              workflow_id: workflow.id
-              sort: 'cellect' unless SKIP_CELLECT
-            apiClient.type('subjects').get subjectQuery
+            stingyFirebase.get "projects/#{@props.project.id}/subject-set-id"
+              .then (subjectSetID) ->
+                apiClient.type('subjects').get
+                  project_id: project.id
+                  workflow_id: workflow.id
+                  subject_set_id: subjectSetID if subjectSetID?
+                  sort: 'cellect' unless SKIP_CELLECT
 
         .then (subjects) ->
           upcomingSubjects.forWorkflow[workflow.id].push subjects...
