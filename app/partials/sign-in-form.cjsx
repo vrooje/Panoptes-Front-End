@@ -42,6 +42,7 @@ module.exports = React.createClass
     disabled = @state.currentUser? or @state.busy
 
     <form onSubmit={@handleSubmit}>
+      <p>NOTE: We're having some trouble with login. If you're having trouble, <a href="https://www.zooniverse.org/password/reset" target="_blank">please reset your password</a>.</p>
       <label>
         <Translate content="signInForm.userName" />
         <input type="text" className="standard-input full" name="display_name" value={@state.display_name} disabled={disabled} autoFocus onChange={@handleInputChange} />
