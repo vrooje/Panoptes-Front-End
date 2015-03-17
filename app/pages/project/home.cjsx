@@ -95,7 +95,7 @@ module.exports = React.createClass
           </div>
           <div className="stat">
             <div className="label">Project completion</div>
-            <div className="value">{Math.round @props.project.retired_subjects_count / @props.project.subjects_count * 100}%</div>
+            <div className="value">{Math.round(@props.project.retired_subjects_count / @props.project.subjects_count * 100) || 0}%</div>
           </div>
         </div>
 
