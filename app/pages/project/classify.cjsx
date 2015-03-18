@@ -9,12 +9,23 @@ Classifier = require '../../classifier'
 auth = require '../../api/auth'
 stingyFirebase = require '../../lib/stingy-firebase'
 
+# During Stargazing, refresh the workflow as soon as a user logs in.
+if process.env.NODE_ENV is 'production' and location?.href.indexOf('stargazing') isnt -1
+  preloadWorkflow = ->
+    console?.warn 'AUTH CHANGED'
+    auth.checkCurrent().then (user) ->
+      console?.warn 'AUTH GOT USER?', user?.display_name ? false
+      if user?
+        console?.warn 'PRELOADING WORKFLOW'
+        apiClient.type('workflows').get '1', {}
+
+  preloadWorkflow()
+  auth.listen 'change', preloadWorkflow
+
 SKIP_CELLECT = location.search.match(/\Wcellect=0(?:\W|$)/)?
 
 if SKIP_CELLECT
   console?.warn 'Intelligent subject selection disabled'
-
-
 
 # Map each project ID to a promise of its last randomly-selected workflow ID.
 # This is to maintain the same random workflow for each project when none is specified by the user.
