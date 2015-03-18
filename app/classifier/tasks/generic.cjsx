@@ -27,17 +27,13 @@ module.exports = React.createClass
           <br />
           <small>
             <strong>
-              <button type="button" className="minor-button" onClick={@toggleHelp}>
+              <button type="button" className="minor-button" onClick={@showHelp}>
                 Need some help?
-                {if @state.helping
-                  <Tooltip attachment="middle right" targetAttachment="middle left" onExit={@toggleHelp}>
-                    <Markdown className="classification-task-help">{@props.help}</Markdown>
-                  </Tooltip>}
               </button>
             </strong>
           </small>
         </p>}
     </div>
 
-  toggleHelp: ->
-    @setState helping: not @state.helping
+  showHelp: ->
+    alert <Markdown className="classification-task-help">{@props.help}</Markdown>
