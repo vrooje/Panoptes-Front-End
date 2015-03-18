@@ -77,7 +77,7 @@ module.exports = React.createClass
       count ?= 0
       count + 1
 
-    hashtags = contentInput.value.match /#\S+\w/g
+    hashtags = contentInput.value.toLowerCase().match /#\S+\w/g
     if hashtags?
       for hashtag in hashtags
         hashtag = hashtag.slice 1
