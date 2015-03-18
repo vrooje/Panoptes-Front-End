@@ -60,10 +60,10 @@ module.exports = React.createClass
           </div>}
       </div>
 
-      <div className="columns-container spread" style={fontSize: '0.8em', fontWeight: 'bold', textAlign: 'center'}>
-        <span>Recent</span>
-        <span>Library</span>
-        <span>Subtraction</span>
+      <div className="columns-container" style={fontSize: '0.8em', fontWeight: 'bold', textAlign: 'center'}>
+        <div style={minWidth: '1em'}>Recent</div>
+        <div style={minWidth: '1em'}>Library</div>
+        <div style={minWidth: '1em'}>Subtraction</div>
       </div>
 
       <div className="subject-tools">
