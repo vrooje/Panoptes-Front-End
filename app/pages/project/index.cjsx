@@ -106,6 +106,10 @@ module.exports = React.createClass
 
   fetchProject: (_, props = @props) ->
     unless @state.pending.project?
+      if location?.href.indexOf('stargazing') isnt -1
+        props.params =
+          owner: 'zooniverse'
+          name: 'Snapshot Supernova'
       query =
         owner: props.params.owner
         display_name: props.params.name
