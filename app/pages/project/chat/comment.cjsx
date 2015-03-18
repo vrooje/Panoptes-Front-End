@@ -45,7 +45,7 @@ module.exports = React.createClass
                 <i className="fa fa-comments fa-fw"></i>}
           </span>
 
-          {unless @props.summary or @props.comment.flagged?
+          {unless @props.summary or @props.comment.flagged is true
             <ChangeListener target={auth}>{=>
               <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
                 if user?
