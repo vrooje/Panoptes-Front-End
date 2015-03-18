@@ -178,7 +178,7 @@ module.exports = React.createClass
             <button type="button" className="minor-button" onClick={@handleSignOut}><Translate content="registerForm.signOut" /></button>
           </span>
         else if @state.serverError
-          <span className="form-help error">{@state.serverError.toString()}</span>
+          <span className="form-help error" title={@state.serverError.message}>There was an error. Try again.</span>
         else
           <span>&nbsp;</span>}
       </p>
@@ -273,17 +273,17 @@ module.exports = React.createClass
 
   handleSubmit: (e) ->
     e.preventDefault()
+    @props.onSubmit? e
+
     display_name = @refs.name.getDOMNode().value
     password = @refs.password.getDOMNode().value
     email = @refs.email.getDOMNode().value
     credited_name = @refs.realName.getDOMNode().value
     global_email_communication = @refs.okayToEmail.getDOMNode().checked
 
-    @props.onSubmit?()
-    registration = auth.register {display_name, password, email, global_email_communication}
-      .then (user) ->
+    auth.register {display_name, password, email, global_email_communication}
+      .then (user) =>
         user.update({credited_name}).save()
-    registration
       .then @props.onSuccess
       .catch @props.onFailure
 

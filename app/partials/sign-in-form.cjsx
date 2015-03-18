@@ -31,18 +31,25 @@ module.exports = React.createClass
     auth.stopListening @handleAuthChange
 
   handleAuthChange: ->
-    @setState busy: true, =>
-      auth.checkCurrent().then (currentUser) =>
-        @setState {currentUser}
-        if currentUser?
-          @setState display_name: currentUser.display_name, password: '********'
-        @setState busy: false
+    @setState
+      busy: true
+      =>
+        auth.checkCurrent().then (currentUser) =>
+          @setState
+            busy: false
+            currentUser: currentUser
+
+          if currentUser?
+            @setState
+              display_name: currentUser.display_name
+              password: '********'
 
   render: ->
     disabled = @state.currentUser? or @state.busy
 
     <form onSubmit={@handleSubmit}>
-      <p>NOTE: We're having some trouble with login. If you're having trouble, <a href="https://www.zooniverse.org/password/reset" target="_blank">please reset your password</a>.</p>
+      <p>NOTE: We're having some issues with login. If you're having trouble, <a href="https://www.zooniverse.org/password/reset" target="_blank">please reset your password</a>.</p>
+
       <label>
         <Translate content="signInForm.userName" />
         <input type="text" className="standard-input full" name="display_name" value={@state.display_name} disabled={disabled} autoFocus onChange={@handleInputChange} />
@@ -59,7 +66,7 @@ module.exports = React.createClass
         {if @state.currentUser?
           <div className="form-help">
             Signed in as {@state.currentUser.display_name}{' '}
-            <button type="button" className="minor-button" onClick={@handleSignOut}>Sign out</button>
+            <small><button type="button" className="minor-button" onClick={@handleSignOut}>Sign out</button></small>
           </div>
 
         else if @state.error?
@@ -67,7 +74,7 @@ module.exports = React.createClass
             {if @state.error.message.match /invalid(.+)password/i
               <Translate content="signInForm.incorrectDetails" />
             else
-              <span>{@state.error.toString()}</span>}{' '}
+              <span title={@state.error.message}>There was an error. Try again.</span>}{' '}
 
             <a href="https://www.zooniverse.org/password/reset" target="_blank">
               <Translate content="signInForm.forgotPassword" />
@@ -93,19 +100,30 @@ module.exports = React.createClass
 
   handleSubmit: (e) ->
     e.preventDefault()
-    @setState working: true, =>
-      {display_name, password} = @state
-      auth.signIn {display_name, password}
-        .then (user) =>
-          @setState working: false, error: null, =>
-            @props.onSuccess? user
-        .catch (error) =>
-          @setState working: false, error: error, =>
-            @getDOMNode().querySelector('[name="display_name"]')?.focus()
-            @props.onFailure? error
-      @props.onSubmit? e
+    @props.onSubmit? e
+    @setState
+      busy: true
+      error: null
+      =>
+        {display_name, password} = @state
+        auth.signIn {display_name, password}
+          .then (user) =>
+            @setState
+              error: null
+              @props.onSuccess? user
+          .catch (error) =>
+            @setState
+              error: error
+              @props.onFailure? error
+          .then =>
+            @setState
+              busy: false
 
   handleSignOut: ->
-    @setState busy: true, =>
-      auth.signOut().then =>
-        @setState busy: false, password: ''
+    @setState
+      busy: true
+      =>
+        auth.signOut().then =>
+        @setState
+          busy: false
+          password: ''
