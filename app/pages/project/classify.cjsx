@@ -22,6 +22,8 @@ if process.env.NODE_ENV is 'production' and location?.href.indexOf('stargazing')
   preloadWorkflow()
   auth.listen 'change', preloadWorkflow
 
+timeOfLastPageLoad = Date.now()
+
 SKIP_CELLECT = location.search.match(/\Wcellect=0(?:\W|$)/)?
 
 if SKIP_CELLECT
@@ -208,6 +210,11 @@ module.exports = React.createClass
             unless alreadyRecorded?
               stingyFirebase.increment volunteerPath
               stingyFirebase.increment "projects/#{@props.project.id}/volunteers-count"
+
+            stingyFirebase.get("projects/#{@props.project.id}/emergency-reload-at").then (timeOfLastEmergencyReload) ->
+              if timeOfLastEmergencyReload? and timeOfLastEmergencyReload > timeOfLastPageLoad
+                alert 'Sorry to interrupt: We’ve just fixed an important bug, so unfortunately we have to reload the page. Don’t worry, your last classification was saved!'
+                location.reload true
 
       console?.log 'Saved classification', classification.id
       # After saving, remove the classification resource from the local cache.
