@@ -78,8 +78,8 @@ module.exports = React.createClass
   showMetadata: ->
     # TODO: Sticky popup.
     alert <div className="content-container">
-      Subject metadata<br />
-      <table>
+      <header><strong>Subject metadata</strong></header>
+      <table className="standard-table">
         {for key, value of @props.subject?.metadata
           <tr key={key}>
             <th>{key}</th>
