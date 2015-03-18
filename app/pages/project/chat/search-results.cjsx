@@ -7,7 +7,7 @@ Comment = require './comment'
 
 SEARCH_TIMEOUT = 1500
 
-searchRoot = stingyFirebase.root.parent().child 'search'
+searchRoot = stingyFirebase.child 'search'
 
 module.exports = React.createClass
   displayName: 'ProjectChatSearchResults'
