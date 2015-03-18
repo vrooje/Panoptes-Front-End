@@ -15,14 +15,25 @@ module.exports = React.createClass
     arrowStyle: null
 
   getInitialState: ->
+    if @props.onExit
+      autoCloser = document.createElement 'div'
+      autoCloser.classList.add 'tooltip-auto-closer'
+
     container = document.createElement 'div'
     container.classList.add 'tooltip-container'
-    document.body.appendChild container
 
+    autoCloser: autoCloser
     container: container
     tether: null
 
   componentDidMount: ->
+    if @props.onExit?
+      document.body.addEventListener 'keydown', @handleKeyDown
+      document.body.appendChild @state.autoCloser
+      @state.autoCloser.addEventListener 'click', @props.onExit
+
+    document.body.appendChild @state.container
+
     @renderTooltip()
 
     @setState
@@ -32,7 +43,13 @@ module.exports = React.createClass
         @toFront()
 
   componentWillUnmount: ->
+    if @props.onExit?
+      document.body.removeEventListener 'keydown', @handleKeyDown
+      @state.autoCloser.parentNode.removeChild @state.autoCloser
+      @state.autoCloser.removeEventListener 'click', @props.onExit
+
     React.unmountComponentAtNode @state.container
+
     @state.container.parentNode.removeChild @state.container
     @state.tether.destroy()
 
@@ -66,3 +83,7 @@ module.exports = React.createClass
   toFront: ->
     if @state.container.nextSibling?
       @state.container.parentNode.appendChild @state.container
+
+  handleKeyDown: (e) ->
+    if e.which is 27 # Esc
+      @props.onExit e

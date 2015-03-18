@@ -145,7 +145,7 @@ module.exports = React.createClass
           <button type="button" className="secret-button" onClick={@setState.bind this, whyRealName: not @state.whyRealName, null}>
             <Translate className="form-help info" content="registerForm.why" />
             {if @state.whyRealName
-              <Tooltip attachment="middle right" targetAttachment="middle left">
+              <Tooltip attachment="middle right" targetAttachment="middle left" onExit={@setState.bind this, whyRealName: false, null}>
                 <Translate content="registerForm.whyRealName" />
               </Tooltip>}
           </button>
