@@ -48,9 +48,9 @@ module.exports = React.createClass
           <PromiseRenderer promise={auth.checkCurrent()}>{(user) =>
             if user?
               <div>
-                <p><strong>Leave a comment</strong></p>
+                <p><strong>Leave a comment.</strong><br /><small>Use <code>#hashtags</code> to flag images as interesting.</small></p>
                 <form onSubmit={@handleSubmit}>
-                  <textarea name="comment-content" className="standard-input full" /><br />
+                  <textarea name="comment-content" rows="5" className="standard-input full" /><br />
                   <button type="submit" className="standard-button">Save comment</button>
                 </form>
               </div>
