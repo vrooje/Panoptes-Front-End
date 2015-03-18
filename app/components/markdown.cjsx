@@ -7,8 +7,9 @@ markdownIt.use require 'markdown-it-emoji'
 markdownIt.use require 'markdown-it-sub'
 markdownIt.use require 'markdown-it-sup'
 markdownIt.use require 'markdown-it-footnote'
-markdownIt.use MarkdownItContainer, 'partners'
 markdownIt.use MarkdownItContainer, 'attribution'
+markdownIt.use MarkdownItContainer, 'figure'
+markdownIt.use MarkdownItContainer, 'partners'
 
 module.exports = React.createClass
   displayName: 'Markdown'
