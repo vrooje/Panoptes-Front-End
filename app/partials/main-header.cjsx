@@ -39,9 +39,9 @@ module.exports = React.createClass
   render: ->
     <header className="main-header">
       <div className="main-title">
-        <Link to="home" className="main-logo">
+        <a href="https://www.zooniverse.org/" className="main-logo">
           <ZooniverseLogo /> Zooniverse
-        </Link>
+        </a>
 
         {if @state.user?
           <AccountBar user={@state.user} />
