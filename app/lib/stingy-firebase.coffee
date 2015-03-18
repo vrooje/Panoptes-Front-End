@@ -62,6 +62,11 @@ module.exports =
       .then (request) ->
         try JSON.parse request.responseText
 
+  put: (path, value) ->
+    makeHTTPRequest 'PUT', "#{rootPath}/#{path}.json", value, null, (request) -> request.withCredentials = false
+      .then (request) ->
+        try JSON.parse request.responseText
+
   Mixin:
     mixins: [ReactFire]
 
