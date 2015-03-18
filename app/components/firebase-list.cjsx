@@ -38,7 +38,12 @@ module.exports = React.createClass
     loadMoreButton = if itemsKeys.length > @state.displayCount
       <button type="button" className="minor-button" onClick={@displayAll}>Load {itemsKeys.length - @state.displayCount} more</button>
 
-    React.createElement @props.tag, className: 'firebase-list', {items, loadMoreButton}
+    children = if @props.reverse
+      {loadMoreButton, items}
+    else
+      {items, loadMoreButton}
+
+    React.createElement @props.tag, className: 'firebase-list', children
 
   displayAll: ->
     @setState displayCount: @state.items.length

@@ -12,7 +12,7 @@ module.exports = React.createClass
 
     <div className="content-container">
       {if stingyFirebase.getAuth()?
-        <FirebaseList items={commentsRef.orderByChild('user').equalTo(stingyFirebase.getAuth().uid)}>{(key, comment) =>
+        <FirebaseList items={commentsRef.orderByChild('user').equalTo(stingyFirebase.getAuth().uid)} reverse>{(key, comment) =>
           linkParams = Object.create @props.params
           linkParams.subjectID = comment.subject
           linkParams.threadID = comment.thread

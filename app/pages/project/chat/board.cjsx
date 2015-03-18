@@ -18,7 +18,7 @@ module.exports = React.createClass
       boardID: @props.params.boardID
 
     <div className="content-container">
-      <FirebaseList ref="threadsList" items={stingyFirebase.child("projects/#{@props.project.id}/threads").orderByChild('board').equalTo(@props.params.boardID)}>{(key, thread) =>
+      <FirebaseList ref="threadsList" items={stingyFirebase.child("projects/#{@props.project.id}/threads").orderByChild('board').equalTo(@props.params.boardID)} reverse>{(key, thread) =>
         linkParams = Object.create defaultLinkParams
         linkParams.threadID = key
         <p key={key}>
