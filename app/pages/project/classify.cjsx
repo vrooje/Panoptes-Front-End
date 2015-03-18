@@ -198,11 +198,7 @@ module.exports = React.createClass
     console?.info 'Completed classification', @state.classification
     @state.classification.save().then (classification) =>
       classificationsCountPath = "projects/#{@props.project.id}/classifications-count"
-      if parseFloat(classification.id) % 250 is 0
-        @props.project.refresh().then ->
-          stingyFirebase.put classificationsCountPath, @props.project.classifications_count
-      else
-        stingyFirebase.increment classificationsCountPath # Inaccurate
+      stingyFirebase.increment classificationsCountPath # NOTE: Inaccurate
 
       auth.checkCurrent().then (user) =>
         identifier = user?.id ? browserFingerprint
