@@ -80,7 +80,9 @@ module.exports = React.createClass
     hashtags = contentInput.value.match /#\S+\w/g
     if hashtags?
       for hashtag in hashtags
-        stingyFirebase.increment "projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags/#{hashtag.slice 1}"
+        hashtag = hashtag.slice 1
+        stingyFirebase.increment "projects/#{@props.project.id}/hashtags/#{hashtag}"
+        stingyFirebase.increment "projects/#{@props.project.id}/subjects/#{@props.params.subjectID}/hashtags/#{hashtag}"
 
     contentInput.value = ''
     @refs.commentsList.displayAll()
