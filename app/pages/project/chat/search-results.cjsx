@@ -32,7 +32,7 @@ module.exports = React.createClass
 
     @setState {results, searchTimeout}, =>
       requestRef = searchRoot.child('request').push
-        index: 'demo_comments'
+        index: if location?.href.indexOf('stargazing') isnt -1 then 'stargazing_comments' else 'demo_comments'
         query: query_string: {query}
         type: 'comment'
 
@@ -53,11 +53,9 @@ module.exports = React.createClass
         if @state.results.length is 0
           <span className="form-help">No results</span>
         else
-          # console.log 'Results', @state.results
+          # console?.log 'Results', @state.results
           for result in @state.results
-            <PromiseRenderer key={result._id} promise={stingyFirebase.get "projects/#{@props.project.id}/comments/#{result._id}"}>{(request) =>
-              comment = JSON.parse request.responseText
-              # console.log 'Comment', comment
+            <PromiseRenderer key={result._id} promise={stingyFirebase.get "projects/#{@props.project.id}/comments/#{result._id}"}>{(comment) =>
               if comment?
                 linkParams = Object.create @props.params
                 linkParams.subjectID = comment.subject
