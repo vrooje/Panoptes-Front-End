@@ -10,6 +10,6 @@ module.exports = React.createClass
   title: 'Results'
 
   render: ->
-    <div className="project-text-content content-container">
+    <div className="project-text-content results-page content-container">
       <Markdown>{@props.project.result || 'This project has no results to report yet.'}</Markdown>
     </div>
