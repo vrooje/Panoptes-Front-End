@@ -7,6 +7,7 @@ PromiseRenderer = require '../../components/promise-renderer'
 {Link} = require 'react-router'
 ProgressWheel = require '../../components/progress-wheel'
 grouper = require 'number-grouper'
+apiClient = require '../../api/client'
 
 getWorkflowCompleteness = (workflow) ->
   total = 0
@@ -84,7 +85,7 @@ module.exports = React.createClass
           </div>
           <div className="stat">
             <div className="label">Classifications</div>
-            <div className="value">{grouper @state.classificationsCount ? 0}</div>
+            <div className="value" onClick={@updateCount}>{grouper @state.classificationsCount ? 0}</div>
           </div>
           <div className="stat">
             <div className="label">Total subjects</div>
@@ -105,3 +106,7 @@ module.exports = React.createClass
         </div>
       </div>
     </div>
+
+  updateCount: ->
+    @props.project.refresh().then =>
+      stingyFirebase.child("/projects/#{@props.project.id}/classifications-count").set @props.project.classifications_count
