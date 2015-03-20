@@ -35,6 +35,7 @@ module.exports = React.createClass
         index: if location?.href.indexOf('stargazing') isnt -1 then 'stargazing_comments' else 'demo_comments'
         query: query_string: {query}
         type: 'comment'
+        options: size: 50, sort: 'timestamp:desc'
 
       searchRoot.child("response/#{requestRef.key()}/hits/hits").on 'value', @handleResults
 
