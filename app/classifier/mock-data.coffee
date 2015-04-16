@@ -20,6 +20,12 @@ workflow = apiClient.type('workflows').create
       '''
       tools: [
         {
+          type: 'multi_point'
+          label: 'Multi Point'
+          color: 'red'
+          points: 2
+        }
+        {
           type: 'point'
           label: 'Point'
           color: 'red'

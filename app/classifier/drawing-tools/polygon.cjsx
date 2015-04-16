@@ -9,28 +9,40 @@ GRAB_STROKE_WIDTH = 6
 
 DELETE_BUTTON_WEIGHT = 5 # Weight of the second point.
 
+statics =
+  initCoords: null
+
+  defaultValues: ({x, y}) ->
+    points: []
+    closed: null
+
+  initStart: ({x, y}, mark, e, tool) ->
+    console.log tool
+    mark.points.push {x, y}
+    points: mark.points
+
+    if mark.points.length == tool.points
+      mark.closed = false
+
+  initMove: ({x, y}, mark) ->
+    mark.points[mark.points.length - 1] = {x, y}
+    points: mark.points
+
+  isComplete: (mark) ->
+    mark.closed?
+
+
 module.exports = React.createClass
   displayName: 'PolygonTool'
-
-  statics:
-    initCoords: null
-
-    defaultValues: ({x, y}) ->
-      points: []
-      closed: null
-
-    initStart: ({x, y}, mark) ->
-      mark.points.push {x, y}
-      points: mark.points
-
-    initMove: ({x, y}, mark) ->
-      mark.points[mark.points.length - 1] = {x, y}
-      points: mark.points
-
-    isComplete: (mark) ->
-      mark.closed?
+  
+  statics: statics
+  
+  getDefaultProps: ->
+    showGuideline: true
+    points: 5
 
   render: ->
+    console.log "props in polygon tool", @props
     averageScale = (@props.scale.horizontal + @props.scale.vertical) / 2
     finisherRadius = FINISHER_RADIUS / averageScale
 
@@ -69,7 +81,7 @@ module.exports = React.createClass
 
           {unless @props.mark.closed?
             <g>
-              {if @props.mark.points.length > 2
+              {if @props.mark.points.length > 2 && @props.showGuideline
                 <line className="guideline" x1={lastPoint.x} y1={lastPoint.y} x2={firstPoint.x} y2={firstPoint.y} />}
               <circle className="clickable" r={finisherRadius} cx={firstPoint.x} cy={firstPoint.y} onClick={@handleFinishClick.bind this, true} />
               <circle className="clickable" r={finisherRadius} cx={lastPoint.x} cy={lastPoint.y} onClick={@handleFinishClick.bind this, false} />
@@ -91,3 +103,6 @@ module.exports = React.createClass
     @props.mark.points[index].x += d.x / @props.scale.horizontal
     @props.mark.points[index].y += d.y / @props.scale.vertical
     @props.onChange e
+
+module.exports.statics = statics
+

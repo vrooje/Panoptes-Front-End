@@ -170,7 +170,7 @@ module.exports = React.createClass
           mark[key] = value
 
     if MarkComponent.initStart?
-      initValues = MarkComponent.initStart mouseCoords, mark, e
+      initValues = MarkComponent.initStart mouseCoords, mark, e, toolDescription
       for key, value of initValues
         mark[key] = value
 
