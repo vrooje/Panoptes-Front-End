@@ -15,9 +15,25 @@ Moderation = require './lib/moderation'
 ROLES = require './lib/roles'
 merge = require 'lodash.merge'
 
+apiClient = require '../api/client'
+TransitionToTalkOfMixin =
+  # TODO: Make get request to resource before delete happens
+  transitionToTalkOf: (resource) ->
+    # resource must be one with a board attribute
+    # this depends on the Router.Navigation mixin transitionToMethod
+
+    console.log "resource", resource
+    if resource.section is 'zooniverse'
+      @transitionTo('talk')
+    else
+      projectId = resource.section.split('-')[0] # string
+      apiClient.type('projects').get(projectId).then (project) =>
+        project.get('owner').then (owner) =>
+          @transitionTo('project-talk-discussion', {owner: owner.login, name: project.slug, board: discussion.board_id, discussion: discussion.id})
+
 module?.exports = React.createClass
   displayName: 'TalkBoard'
-  mixins: [Router.Navigation]
+  mixins: [Router.Navigation, TransitionToTalkOfMixin]
 
   getInitialState: ->
     discussions: []
@@ -60,9 +76,10 @@ module?.exports = React.createClass
 
   onClickDeleteBoard: ->
     if window.confirm("Are you sure that you want to delete this board? All of the comments and discussions will be lost forever.")
+      deletedBoard = @state.board
       @boardRequest().delete()
-        .then (deleted) =>
-          @transitionTo('talk')
+        .then =>
+          @transitionToTalkOf(deletedBoard)
 
   onPageChange: (page) ->
     @goToPage(page)
