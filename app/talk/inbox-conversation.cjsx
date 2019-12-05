@@ -1,16 +1,51 @@
 React = require 'react'
-talkClient = require '../api/talk'
-apiClient = require '../api/client'
-PromiseRenderer = require '../components/promise-renderer'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+talkClient = require 'panoptes-client/lib/talk-client'
+apiClient = require 'panoptes-client/lib/api-client'
+SingleSubmitButton = require '../components/single-submit-button'
 HandlePropChanges = require '../lib/handle-prop-changes'
-Markdown = require '../components/markdown'
+{Markdown} = require 'markdownz'
 CommentBox = require './comment-box'
 {Link} = require 'react-router'
 {timestamp} = require './lib/time'
+{ Helmet } = require 'react-helmet'
+counterpart = require 'counterpart'
 
-module?.exports = React.createClass
+
+Message = createReactClass
+  displayName: 'Message'
+  
+  getInitialState: ->
+    commentOwner: null
+  
+  componentDidMount: ->
+    @updateOwner @props.data.user_id
+
+  componentWillReceiveProps: (newProps) ->
+    @updateOwner newProps.data.user_id if newProps.data isnt @props.data
+
+  updateOwner: (user_id)->
+    apiClient.type 'users'
+      .get user_id
+      .then (commentOwner) =>
+        @setState {commentOwner}
+  
+  render: ->
+    <div className="conversation-message">
+      <span>
+        <strong><Link to="/users/#{@state.commentOwner?.login}">{@state.commentOwner?.display_name}</Link> (@{@state.commentOwner?.login})</strong>{' '}
+        <span>{timestamp(@props.data.updated_at)}</span>
+      </span>
+      <Markdown>{@props.data.body}</Markdown>
+    </div>
+
+module.exports = createReactClass
   displayName: 'InboxConversation'
   mixins: [HandlePropChanges]
+
+  contextTypes:
+    router: PropTypes.object.isRequired
 
   getInitialState: ->
     messages: []
@@ -44,18 +79,6 @@ module?.exports = React.createClass
         messagesMeta = messages[0].getMeta()
         @setState {messages, messagesMeta}
 
-  message: (data, i) ->
-    <div className="conversation-message" key={data.id}>
-      <PromiseRenderer promise={apiClient.type('users').get(data.user_id)}>{(commentOwner) =>
-        <span>
-          <strong><Link to="user-profile" params={name: commentOwner.login}>{commentOwner.display_name}</Link></strong>{' '}
-          <span>{timestamp(data.updated_at)}</span>
-        </span>
-      }</PromiseRenderer>
-
-      <Markdown>{data.body}</Markdown>
-    </div>
-
   onSubmitMessage: (_, textContent) ->
     body = textContent
     user_id = +@props.user.id
@@ -67,24 +90,32 @@ module?.exports = React.createClass
       .then (message) =>
         @setConversation()
 
+  handleDelete: (e) ->
+    e.preventDefault()
+    if confirm 'Are you sure you want to archive this conversation?'
+      @state.conversation.delete().then =>
+        @context.router.push '/inbox'
+
   render: ->
     if @props.user
       <div className="talk inbox-conversation content-container">
+        <Helmet title="#{@state.conversation?.title} » #{counterpart 'messagesPage.title'}" />
+        <Link to="/inbox">Back to Inbox</Link>
         <h1>{@state.conversation?.title}</h1>
         {if @state.recipients.length
           <div>
             In this conversation:{' '}
             {@state.recipients.map (user, i) =>
               <span key={user.id}>
-                <Link to="user-profile" params={name: user.login}>
+                <Link to="/users/#{user.login}">
                   {user.display_name}
                 </Link>{', ' unless i is @state.recipients.length-1}
               </span>
               }
           </div>
           }
-
-        <div>{@state.messages.map(@message)}</div>
+        <SingleSubmitButton className="delete-conversation" onClick={@handleDelete}>Delete this conversation</SingleSubmitButton>
+        <div>{@state.messages.map (message) -> <Message data={message} key={message.id} />}</div>
         <CommentBox
           header={"Send a message..."}
           content=""

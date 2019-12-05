@@ -1,9 +1,11 @@
-module?.exports =
+module.exports =
 
-  discussionPageSize: 10
+  discussionPageSize: 20
 
   inboxPageSize: 10
 
   boardPageSize: 10
 
   moderationsPageSize: 20
+
+  recentsPageSize: 20

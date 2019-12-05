@@ -1,42 +1,43 @@
 React = require 'react'
-moment = require 'moment'
-apiClient = require '../../api/client'
-talkClient = require '../../api/talk'
-Markdown = require '../../components/markdown'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+talkClient = require 'panoptes-client/lib/talk-client'
 Paginator = require '../../talk/lib/paginator'
-CommentLink = require './comment-link'
+CommentLink = require('./comment-link').default
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'UserProfileFeed'
 
   propTypes:
-    user: React.PropTypes.object
+    user: PropTypes.object
 
   getDefaultProps: ->
-    query:
-      page: 1
+    location: query: page: 1
 
   getInitialState: ->
     comments: null
     error: null
 
   componentDidMount: ->
-    @getComments(@props.profileUser, @props.query.page)
+    @getComments(@props.profileUser, @props.location.query.page)
 
   componentWillReceiveProps: (nextProps) ->
-    unless nextProps is @props.profileUser and nextProps.query.page is @props.query.page
-      @getComments(nextProps.profileUser, nextProps.query.page)
+    unless nextProps is @props.profileUser and nextProps.location.query.page is @props.location.query.page
+      @getComments(nextProps.profileUser, nextProps.location.query.page)
 
   getComments: (user, page) ->
-    @setState({
+    @setState {
       comments: null
       error: null
-    })
-    talkClient.type('comments').get({user_id: user.id, page: page, sort: '-created_at'})
-      .catch (error) =>
-        @setState({error})
-      .then (comments) =>
-        @setState({comments})
+    }, =>
+      criteria = {user_id: user.id, page: page, sort: '-created_at'}
+      if @props.project?
+        criteria.section = "project-#{@props.project.id}"
+      talkClient.type('comments').get(criteria)
+        .catch (error) =>
+          @setState({error})
+        .then (comments) =>
+          @setState({comments})
 
   render: ->
     <div className="content-container">
@@ -48,7 +49,7 @@ module.exports = React.createClass
           <h2>Recent comments</h2>
 
           {for comment in @state.comments
-            <CommentLink key={comment.id} comment={comment} />}
+            <CommentLink key={comment.id} comment={comment} project={@props.project}/>}
 
           <Paginator pageCount={meta.page_count} page={meta.page} />
         </div>

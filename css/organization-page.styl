@@ -1,0 +1,209 @@
+.organization-page
+  background-color: BACKGROUND_COLOR
+  color: white
+  display: flex
+  flex: 1 0 auto
+  flex-direction: column
+  font-family: 'Karla', sans-serif
+
+  &__container
+    display: flex
+    flex-flow: row wrap
+
+  &__projects-status
+    align-items: center
+    color: TEAL_DARK
+    display: flex
+    flex-flow: column
+    margin: 3em
+
+  &__toggle
+    color: TEAL_DARK
+    margin-left: 2em
+
+  &__categories
+    display: flex
+    justify-content: center
+    flex-wrap: wrap
+
+  &__category-button
+    background: white
+    border: 1px #EBEBEB
+    border-radius: 0
+    color: TEAL_MID
+    font-weight: bold
+    margin: .8em .5em
+    width: 150px
+
+    @media (max-width: 900px)
+      width: auto
+
+    &:focus,
+    &:hover
+      background: TEAL_DARK
+      border: 1px TEAL_DARK
+      color: white
+
+    &--active
+      background: TEAL_DARK
+      border: 1px TEAL_DARK
+      color: white
+
+    &--hidden
+      left: -9999px
+      position: absolute
+
+.organization-hero
+  background-size: cover
+  min-height: 400px
+  position: relative
+
+  @media (max-width: 900px)
+    min-height: 500px
+
+  &__background-gradient
+    background: radial-gradient(rgba(black, .2), rgba(black, .7))
+    display: flex
+    flex-direction: column
+    height: 100%
+    position: absolute
+    width: 100%
+
+  &__container
+    align-items: center
+    display: flex
+    flex-grow: 1
+    padding-left: 8em
+
+    @media (max-width: 900px)
+      justify-content: center
+      flex-direction: column
+      padding-left: 0
+
+  &__avatar
+    border-radius: 50%
+    vertical-align: -.3em
+
+  &__wrapper
+    margin-left: 3em
+
+    @media (max-width: 900px)
+      align-items: center
+      display: flex
+      flex-direction: column
+      margin-left: 0
+
+  &__title
+    font-size: 2.5em
+    font-weight: bold
+
+  &__description
+    font-size: 1em
+    font-weight: normal
+
+    @media (max-width: 900px)
+      margin: .8em
+      text-align: center
+
+.organization-details
+
+  &__heading
+    text-transform: uppercase
+
+  &__content
+    background-color: TEAL_MID
+    flex: 3 1 auto
+    padding: 3em 3em 4em
+    text-align: left
+    width: 600px
+
+    .markdown
+      a
+        background: none
+        border: 0
+        color: BACKGROUND_COLOR
+        font-weight: bold
+        margin: 0
+        padding: 0
+
+        &:hover
+          background: none
+          border: 0
+          color: HIGHLIGHT_COLOR
+
+      hr
+        background-color: white
+
+      img
+        max-width: 100%
+
+      p
+        line-height: 1.75
+
+  &__button
+    background: TEAL_MID
+    border: white
+    margin-top: 2em
+
+    &:focus,
+    &:hover
+      background: TEAL_LIGHT
+
+  &__links
+    background-color: white
+    color: ZOONIVERSE_NAVY
+    display: flex
+    flex: 2 0 auto
+    flex-direction: column
+    padding: 3em 4vw
+    width: 250px
+
+  &__link
+    align-items: center
+    display: flex
+    font-size: 1.2em
+    margin-left: .8em
+    margin-top: 20px
+    text-decoration: none
+
+  &__icon
+    padding-right: .1em
+
+  &__about-content
+    max-height: 300px
+    overflow-y: hidden
+
+    &--expanded
+      max-height: none
+
+.organization-researcher-words
+  background-color: white
+  color: ZOONIVERSE_NAVY
+  display: flex
+  flex: 2 0 auto
+  flex-direction: column
+  padding: 3em 4vw
+  width: 250px
+
+  &__container
+    display: flex
+    margin-top: 1.5em
+
+  &__avatar
+    border-radius: 50%
+    float: left
+    height: 5em
+    margin-right: 1em
+    min-width: 5em
+
+  &__quote
+    font-size: 1.75em
+    line-height: 1.2em
+    overflow: auto
+    word-wrap: break-word
+
+  &__attribution
+    color: ZOONIVERSE_NAVY
+    font-size: 1em
+    margin: 1em auto
+    text-decoration: none

@@ -1,27 +1,57 @@
 React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+ReactDOM = require 'react-dom'
 CommentBox = require './comment-box'
 {getErrors} = require './lib/validations'
 commentValidations = require './lib/comment-validations'
 discussionValidations = require './lib/discussion-validations'
-talkClient = require '../api/talk'
-Loading = require '../components/loading-indicator'
-PromiseRenderer = require '../components/promise-renderer'
+talkClient = require 'panoptes-client/lib/talk-client'
+Loading = require('../components/loading-indicator').default
 projectSection = require '../talk/lib/project-section'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'DiscussionNewForm'
 
+  contextTypes:
+    geordi: PropTypes.object
+
   propTypes:
-    boardId: React.PropTypes.number
-    onCreateDiscussion: React.PropTypes.func
-    subject: React.PropTypes.object # subject response
+    boardId: PropTypes.number
+    onCreateDiscussion: PropTypes.func
+    project: PropTypes.object
+    subject: PropTypes.object # subject response
 
   getInitialState: ->
     discussionValidationErrors: []
     loading: false
+    boards: []
+
+  componentDidMount: ->
+    @updateBoards @props.subject
+
+  componentWillReceiveProps: (newProps) ->
+    @updateBoards newProps.subject if newProps.subject isnt @props.subject
+
+  updateBoards: (subject) ->
+    if @props.project?.id
+      @getProjectBoards(@props.project)
+    else
+      subject?.get 'project'
+        .then (project) =>
+          @getProjectBoards(project)
+    
+  getProjectBoards: (project) ->
+    talkClient.type 'boards'
+      .get
+        section: projectSection(project)
+        subject_default: false
+        page_size: 50
+      .then (boards) =>
+        @setState {boards}
 
   discussionValidations: (commentBody) ->
-    discussionTitle = @getDOMNode().querySelector('.new-discussion-title').value
+    discussionTitle = ReactDOM.findDOMNode(@).querySelector('.new-discussion-title').value
     commentErrors = getErrors(commentBody, commentValidations)
     discussionErrors = getErrors(discussionTitle, discussionValidations)
 
@@ -32,7 +62,7 @@ module?.exports = React.createClass
 
   onSubmitDiscussion: (e, commentText, subject) ->
     @setState loading: true
-    form = @getDOMNode().querySelector('.talk-board-new-discussion')
+    form = ReactDOM.findDOMNode(@).querySelector('.talk-board-new-discussion')
     titleInput = form.querySelector('input[type="text"]')
     title = titleInput.value
 
@@ -54,6 +84,9 @@ module?.exports = React.createClass
       .then (discussion) =>
         @setState loading: false
         titleInput.value = ''
+        @context?.geordi?.logEvent
+          type: 'add-discussion'
+          data: discussion.title
         @props.onCreateDiscussion?(discussion)
 
   boardRadio: (board, i) ->
@@ -61,7 +94,7 @@ module?.exports = React.createClass
       <input
         type="radio"
         name="board"
-        defaultChecked={i is 0} # pre-check the first
+        defaultChecked={i is 0}
         value={board.id} />
       {board.title}
     </label>
@@ -71,14 +104,10 @@ module?.exports = React.createClass
       <div className="talk-board-new-discussion">
         <h2>Create a discussion +</h2>
         {if not @props.boardId
-          <PromiseRenderer promise={@props.subject.get('project')}>{(project) =>
-            <PromiseRenderer promise={talkClient.type('boards').get(section: projectSection(project))}>{(boards) =>
-              <div>
-                <h2>Board</h2>
-                {boards.map @boardRadio}
-              </div>
-            }</PromiseRenderer>
-          }</PromiseRenderer>
+          <div>
+            <h2>Board</h2>
+            {@state.boards.map @boardRadio}
+          </div>
           }
         <input
           className="new-discussion-title"
@@ -86,6 +115,7 @@ module?.exports = React.createClass
           placeholder="Discussion Title"/>
         <CommentBox
           user={@props.user}
+          project={@props.project}
           header={null}
           validationCheck={@discussionValidations}
           validationErrors={@state.discussionValidationErrors}
@@ -93,6 +123,7 @@ module?.exports = React.createClass
           placeholder={"""Add a comment here to start the discussion.
           This comment will appear at the start of the discussion."""}
           onSubmitComment={@onSubmitDiscussion}
+          logSubmit={true}
           subject={@props.subject}
           submit="Create Discussion"/>
         {if @state.loading then <Loading />}

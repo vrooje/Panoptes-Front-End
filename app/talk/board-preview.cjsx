@@ -1,34 +1,51 @@
 React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
 {Link} = require 'react-router'
-{timestamp, timeAgo} = require './lib/time'
 resourceCount = require './lib/resource-count'
-talkClient = require '../api/talk'
-PromiseRenderer = require '../components/promise-renderer'
-apiClient = require '../api/client'
 LatestCommentLink = require './latest-comment-link'
-merge = require 'lodash.merge'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'TalkBoardDisplay'
 
   propTypes:
-    data: React.PropTypes.object
+    data: PropTypes.object
+
+  private: ->
+    @props.data.permissions.read isnt 'all'
+
+  boardLink: ->
+    {owner, name} = @props.params
+    boardId = @props.data.id
+
+    if @props.project
+      <Link to="/projects/#{owner}/#{name}/talk/#{boardId}">
+        {@props.data.title}
+      </Link>
+    else
+      <Link to="/talk/#{boardId}">{@props.data.title}</Link>
 
   render: ->
-    <div className="talk-board-preview">
+    <div className="talk-board-preview #{if @private() then 'private' else 'all'}">
+      {if @private()
+        <i className="board-locked fa fa-lock" />
+        }
+
       <div className="preview-content">
         <h1>
-          <Link to="#{if @props.project then 'project-' else ''}talk-board" params={merge({}, {board: @props.data.id}, @props.params)}>
-             {@props.data.title}
-          </Link>
+          {@boardLink()}
         </h1>
 
         <p>{@props.data.description}</p>
 
-        <PromiseRenderer promise={talkClient.type('discussions').get({board_id: @props.data.id, sort: '-updated_at', sort_linked_comments: 'created_at'}).index(0)}>{(discussion) =>
-          if discussion?
-            <LatestCommentLink {...@props} title={true} project={@props.project} discussion={discussion} />
-        }</PromiseRenderer>
+        <LatestCommentLink {...@props}
+          title={true}
+          project={@props.project}
+          discussion={@props.data.latest_discussion}
+          comment={@props.comment}
+          author={@props.author}
+          roles={@props.roles}
+        />
       </div>
 
       <div className="preview-stats">

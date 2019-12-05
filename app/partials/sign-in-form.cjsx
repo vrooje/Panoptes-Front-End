@@ -1,20 +1,26 @@
 counterpart = require 'counterpart'
 React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+ReactDOM = require 'react-dom'
 Translate = require 'react-translate-component'
-auth = require '../api/auth'
-LoadingIndicator = require '../components/loading-indicator'
+auth = require 'panoptes-client/lib/auth'
+LoadingIndicator = require('../components/loading-indicator').default
 
 counterpart.registerTranslations 'en',
   signInForm:
     signIn: 'Sign in'
     signOut: 'Sign out'
-    userName: 'User name or Email Address'
+    userName: 'User name or email address'
     password: 'Password'
     incorrectDetails: 'Username or password incorrect'
     forgotPassword: 'Forget your password?'
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'SignInForm'
+
+  contextTypes:
+    geordi: PropTypes.object
 
   getInitialState: ->
     busy: false
@@ -28,7 +34,7 @@ module.exports = React.createClass
     <form method="POST" onSubmit={@handleSubmit}>
       <label>
         <Translate content="signInForm.userName" />
-        <input type="text" className="standard-input full" name="login" value={@props.user?.login} disabled={disabled} autoFocus onChange={@handleInputChange} />
+        <input type="text" className="standard-input full" name="login" value={@props.user?.login} disabled={disabled} autoFocus onChange={@handleInputChange} maxLength="255" />
       </label>
 
       <br />
@@ -52,7 +58,7 @@ module.exports = React.createClass
             else
               <span>{@state.error.toString()}</span>}{' '}
 
-            <a href="#/reset-password" onClick={@props.onSuccess}>
+            <a href="#{window.location.origin}/reset-password" onClick={@props.onSuccess}>
               <Translate content="signInForm.forgotPassword" />
             </a>
           </div>
@@ -61,12 +67,12 @@ module.exports = React.createClass
           <LoadingIndicator />
 
         else
-          <a href="#/reset-password" onClick={@props.onSuccess}>
+          <a href="#{window.location.origin}/reset-password" onClick={@props.onSuccess}>
             <Translate content="signInForm.forgotPassword" />
           </a>}
       </p>
 
-      <button type="submit" className="standard-button full" disabled={disabled or @state.login.length is 0 or @state.password.length is 0}>
+      <button type="submit" className="standard-button full" disabled={disabled or @state.login.length is 0 or @state.password.length is 0} onClick={@context.geordi?.logEvent type: 'login'}>
         <Translate content="signInForm.signIn" />
       </button>
     </form>
@@ -86,7 +92,7 @@ module.exports = React.createClass
             @props.onSuccess? user
         .catch (error) =>
           @setState working: false, error: error, =>
-            @getDOMNode().querySelector('[name="login"]')?.focus()
+            ReactDOM.findDOMNode(@).querySelector('[name="login"]')?.focus()
             @props.onFailure? error
       @props.onSubmit? e
 

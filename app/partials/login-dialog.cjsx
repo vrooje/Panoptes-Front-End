@@ -1,5 +1,7 @@
 counterpart = require 'counterpart'
 React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
 Translate = require 'react-translate-component'
 SignInForm = require './sign-in-form'
 RegisterForm = require './register-form'
@@ -10,7 +12,7 @@ counterpart.registerTranslations 'en',
     signIn: 'Sign in'
     register: 'Register'
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'LoginDialog'
 
   getDefaultProps: ->
@@ -19,6 +21,12 @@ module.exports = React.createClass
 
   getInitialState: ->
     which: @props.which
+
+  childContextTypes:
+    geordi: PropTypes.object
+
+  getChildContext: ->
+    geordi: @props.contextRef?.geordi
 
   render: ->
     <div className="tabbed-content" data-side="top" onSubmit={@handleSubmit}>

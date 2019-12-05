@@ -1,22 +1,32 @@
-@require "./user-profile-header"
+@require './talk'
 
 .user-profile
   background-color: #fbfbfb
 
   .user-profile-hero
+    position: relative
     .overlay
-      background-color: #0072ff
-      height: inherit
+      background-color: TEAL_MID
       left: 0
+      top: 0
+      bottom: 0
+      right 0
       opacity: 0.7
       position: absolute
-      top: 0
-      width: 100%
-      z-index: 0
 
     .hero-container
       position: relative
       z-index: 1
+      margin: 0
+      max-width: initial
+
+      img.avatar
+        margin-right: 10px
+
+      span.login-name
+        padding-left: 7px
+        font-size: 0.65em
+        font-weight: 200
 
   .user-profile-content
     font-size: 15px
@@ -26,3 +36,12 @@
   .private-message-page
     max-width: 800px
     margin: 0 auto
+
+    .block-user
+      .block-button
+        @extend .talk button:not(.link-style)
+
+      .description
+        display: inline-block
+        margin: auto 10px
+        color: #989898

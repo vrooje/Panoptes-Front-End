@@ -1,12 +1,11 @@
 React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
 CommentBox = require './comment-box'
-talkClient = require '../api/talk'
-apiClient = require '../api/client'
-parseSection = require './lib/parse-section'
+talkClient = require 'panoptes-client/lib/talk-client'
+apiClient = require 'panoptes-client/lib/api-client'
 projectSection = require './lib/project-section'
-{State, Navigation} = require 'react-router'
-merge = require 'lodash.merge'
-getPageOfComment = require './lib/get-page-of-comment'
+merge = require 'lodash/merge'
 {getErrors} = require './lib/validations'
 commentValidations = require './lib/comment-validations'
 talkConfig = require './config'
@@ -19,16 +18,28 @@ defaultDiscussionTitle = (subject) ->
 
 PAGE_SIZE = talkConfig.discussionPageSize
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'TalkQuickSubjectCommentForm'
-  mixins: [State, Navigation]
 
   propTypes:
-    subject: React.PropTypes.object
-    user: React.PropTypes.object
+    params: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      owner: PropTypes.string.isRequired
+    }).isRequired
+    subject: PropTypes.object
+    user: PropTypes.object
+
+  contextTypes:
+    router: PropTypes.object.isRequired
 
   getInitialState: ->
     commentValidationErrors: []
+
+  getDefaultProps: ->
+    params: {
+      name: ''
+      owner: ''
+    }
 
   commentValidations: (commentBody) ->
     commentErrors = getErrors(commentBody, commentValidations)
@@ -37,7 +48,7 @@ module?.exports = React.createClass
 
   onSubmitComment: (e, commentText, subject) ->
     e.preventDefault()
-    {name, owner} = @getParams() # of project, maybe better to pass in as prop later
+    {name, owner} = @props.params
 
     # get project
     apiClient.type('projects').get({slug: owner + '/' + name})
@@ -61,9 +72,7 @@ module?.exports = React.createClass
 
                     talkClient.type('comments').create(comment).save()
                       .then (comment) =>
-                        pageOfComment = getPageOfComment(comment, discussion, PAGE_SIZE)
-                        @transitionTo('project-talk-discussion', {owner: owner, name: name, board: discussion.board_id, discussion: discussion.id}, {page: pageOfComment, comment: comment.id})
-
+                        @context.router.push "/projects/#{owner}/#{name}/talk/#{discussion.board_id}/#{discussion.id}?comment=#{comment.id}"
                   else
                     focus_id = +@props.subject?.id
                     focus_type = 'Subject' if !!focus_id
@@ -81,7 +90,7 @@ module?.exports = React.createClass
                       }
                     talkClient.type('discussions').create(discussion).save()
                       .then (discussion) =>
-                        @transitionTo('project-talk-discussion', {owner: owner, name: name, board: discussion.board_id, discussion: discussion.id})
+                        @context.router.push "/projects/#{owner}/#{name}/talk/#{discussion.board_id}/#{discussion.id}"
 
             else
               throw new Error("A board for subject comments has not been setup for this project yet.")
@@ -91,13 +100,15 @@ module?.exports = React.createClass
     <div className="quick-subject-comment-form talk-module">
       <h1>Leave a note about this subject</h1>
       <CommentBox
+        project={@props.project}
         user={@props.user}
         header={null}
         validationCheck={@commentErrors}
         validationErrors={@state.commentValidationErrors}
         submitFeedback={"Comment successfully added"}
-        placeholder={"Add a note about this subject."}
+        placeholder={"Add a note about this subject, or mark with a #hashtag"}
         onSubmitComment={@onSubmitComment}
         subject={@props.subject}
-        submit="Add Your comment"/>
+        submit="Add Your comment"
+        logSubmit={true}/>
     </div>

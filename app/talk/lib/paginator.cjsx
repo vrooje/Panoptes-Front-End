@@ -1,54 +1,65 @@
 React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+updateQueryParams = require './update-query-params'
 
-changeSearchString = (searchString, changes) ->
-  params = {}
-  for keyValue in searchString.slice(1).split('&')
-    [key, value] = keyValue.split('=')
-    params[key] = value
-  for key, value of changes
-    params[key] = value
-  "?#{([key, value].join('=') for key, value of params when value?).join('&')}"
-
-updatePageQueryParam = (page) ->
-  [beforeQuestionMark, afterQuestionMark] = location.hash.split('?')
-  oldSearch = '?' + afterQuestionMark
-  newSearch = changeSearchString(oldSearch, {page})
-  location.hash = beforeQuestionMark + newSearch
-
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'Paginator'
 
   propTypes:
-    pageCount: React.PropTypes.number
-    page: React.PropTypes.number                  # page number
-    onPageChange: React.PropTypes.func.isRequired # passed (page) on change
-    firstAndLast: React.PropTypes.bool            # optional, add 'first' & 'last' buttons
-    scrollOnChange: React.PropTypes.bool          # optional, scroll to top of page on change
+    pageCount: PropTypes.number
+    page: PropTypes.number                  # page number
+    onPageChange: PropTypes.func.isRequired # passed (page) on change
+    firstAndLast: PropTypes.bool            # optional, add 'first' & 'last' buttons
+    pageSelector: PropTypes.bool            # show page selector?
+    itemCount: PropTypes.bool               # show number of items out of total
+    pageKey: PropTypes.string               # optional name for key param (defaults to 'page')
+
+  contextTypes:
+    geordi: PropTypes.object
+    router: PropTypes.object.isRequired
 
   getDefaultProps: ->
     page: 1
-    onPageChange: updatePageQueryParam
+    pageKey: 'page'
+    onPageChange: (page) ->
+      queryChange = { }
+      queryChange[@props.pageKey] = page
+      updateQueryParams @context.router, queryChange
+    itemCount: false
     firstAndLast: true
-    scrollOnChange: true
+    pageSelector: true
+    previousLabel: <span><i className="fa fa-long-arrow-left" /> Previous</span>
+    nextLabel: <span>Next <i className="fa fa-long-arrow-right" /></span>
+
+  componentDidMount: ->
+    @logClick = @context.geordi?.makeHandler 'change-page'
+
+  componentWillReceiveProps: (nextProps, nextContext)->
+    @logClick = nextContext?.geordi?.makeHandler? 'change-page'
 
   setPage: (activePage) ->
-    @props.onPageChange(activePage)
-    window.scrollTo(0,0) if @props.scrollOnChange
+    @props.onPageChange.call(this, activePage)
 
   onClickNext: ->
-    {pageCount, page} = @props
-
+    @logClick 'next-page'
+    {pageCount} = @props
+    page = @props.page
+    @props.onClickNext?()
     nextPage = if page is pageCount then pageCount else page + 1
     @setPage(nextPage)
 
   onClickPrev: ->
-    {pageCount, page} = @props
+    @logClick 'previous-page'
+    page = @props.page
+    @props.onClickPrev?()
 
     prevPage = if page is 1 then page else page - 1
     @setPage(prevPage)
 
   onSelectPage: (e) ->
-    selectedPage = +@refs.pageSelect.getDOMNode().value
+    @logClick 'select-page'
+    selectedPage = +@refs.pageSelect.value
     @setPage(selectedPage)
 
   pageOption: (n, i) ->
@@ -57,13 +68,14 @@ module?.exports = React.createClass
     </option>
 
   render: ->
-    {page, pageCount} = @props
+    {pageCount} = @props
+    page = @props.page
 
-    <div className="paginator">
+    <div className="paginator #{ @props.className }">
       {if @props.firstAndLast
         <button
           className="paginator-first"
-          onClick={=> @setPage(1)}
+          onClick={=> @setPage(1); @logClick 'first-page'}
           disabled={page is 1}>
           <i className="fa fa-fast-backward" /> First
         </button>}
@@ -72,27 +84,37 @@ module?.exports = React.createClass
         className="paginator-prev"
         onClick={@onClickPrev}
         disabled={page is 1}>
-        <i className="fa fa-long-arrow-left" /> Previous
+        {@props.previousLabel}
       </button>
 
-      <div className="paginator-page-selector">
-        Page&nbsp;
-        <select value={page} onChange={@onSelectPage} ref="pageSelect">
-          {[1..pageCount].map(@pageOption)}
-        </select> of {pageCount}
-      </div>
+      {if @props.pageSelector
+        firstPage = Math.max 1, page - 5
+        lastPage = Math.min pageCount, firstPage + 9
+        <div className="paginator-page-selector">
+          Page&nbsp;
+          <select value={page} onChange={@onSelectPage} ref="pageSelect">
+            {[firstPage..lastPage].map(@pageOption)}
+          </select> of {pageCount}
+        </div>
+        }
+
+      {if @props.itemCount and @props.totalItems
+        <div className="paginator-page-selector">
+          {@props.totalItems}
+        </div>
+        }
 
       <button
         className="paginator-next"
         onClick={@onClickNext}
         disabled={page is pageCount}>
-        Next <i className="fa fa-long-arrow-right" />
+        {@props.nextLabel}
       </button>
 
       {if @props.firstAndLast
         <button
           className="paginator-last"
-          onClick={=> @setPage(pageCount)}
+          onClick={=> @setPage(pageCount); @logClick 'last-page'}
           disabled={page is pageCount}>
           Last <i className="fa fa-fast-forward" />
         </button>}

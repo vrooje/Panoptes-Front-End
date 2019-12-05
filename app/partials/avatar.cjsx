@@ -1,15 +1,21 @@
 React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
 
-DEFAULT_AVATAR = './assets/simple-avatar.jpg'
+DEFAULT_AVATAR = '/assets/simple-avatar.png'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'Avatar'
 
   propTypes:
-    user: React.PropTypes.object # User response
+    user: PropTypes.object
+    size: PropTypes.any
+    className: PropTypes.string
 
   getDefaultProps: ->
     user: null
+    size: ''
+    className: ''
 
   getInitialState: ->
     loading: false
@@ -29,17 +35,19 @@ module?.exports = React.createClass
     @props.user.stopListening 'change', @handleResourceChange
 
   handleResourceChange: (user = @props.user) ->
-    @setState loading: true
-    user.get 'avatar'
-      .then ([avatar]) =>
-        @setState src: avatar.src
-      .catch =>
-        @setState src: DEFAULT_AVATAR
-      .then =>
-        @setState loading: false
+    @setState src: (user.avatar_src || DEFAULT_AVATAR)
 
   handleError: ->
     @setState src: DEFAULT_AVATAR
 
   render: ->
-    <img src={@state.src} onError={@handleError} alt="User avatar" className="avatar" data-loading={@state.loading || null} />
+    <img
+      src={@state.src}
+      alt="Avatar for #{@props.user.display_name}"
+      className={"avatar #{@props.className}".trim()}
+      style={
+        height: @props.size
+        width: @props.size
+      }
+      onError={@handleError}
+    />

@@ -1,7 +1,9 @@
 html
-  background: white
   color: FOREGROUND
-  font: 400 15px/1.5 "Open Sans", "Gill Sans", Arial, sans-serif
+  font: 400 15px/1.5 "Karla", "Open Sans", "Gill Sans", Arial, sans-serif
+
+  div:lang(cs)
+    font-family: Arial, sans-serif
 
 .attribution
   font-size: 0.7em
@@ -27,6 +29,8 @@ hr
 
 a
   color: MAIN_HIGHLIGHT
+  overflow-wrap: break-word
+  word-break: break-word
 
 .emoji
   max-height: 1em
@@ -41,9 +45,8 @@ h6
   font-weight: bold
   margin: 0
 
-.on-home-page, .on-landing-page
+.home-page-for-user, .on-landing-page
   font-size: 10px
-  line-height: 20px
 
   h1,
   h2,
@@ -110,4 +113,4 @@ h6
 img
   &:not([src]),
   &[src=""]
-    background-stripes: lighten(MAIN_HIGHLIGHT, 20%) darken(SECOND_HIGHLIGHT, 20%) 20%
+    background-stripes: lighten(MAIN_HIGHLIGHT, 20%) darken(SECOND_HIGHLIGHT, 20%) 1em

@@ -1,33 +1,48 @@
 React = require 'react'
-{RouteHandler, Navigation} = require 'react-router'
-TalkInit = require '../../talk/init'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+{Link} = require 'react-router'
+{ Helmet } = require 'react-helmet'
+counterpart = require 'counterpart'
 TalkBreadcrumbs = require '../../talk/breadcrumbs'
+TalkSearchInput = require '../../talk/search-input'
 projectSection = require '../../talk/lib/project-section'
+TalkFootnote = require '../../talk/footnote'
 
-module.exports = React.createClass
+counterpart.registerTranslations 'en',
+  projectTalk:
+    title: 'Talk'
+
+module.exports = createReactClass
   displayName: 'ProjectTalkPage'
-  mixins: [Navigation]
 
-  onSearchSubmit: (e) ->
-    e.preventDefault()
-    query = {query: React.findDOMNode(@refs.projectTalkSearchInput).value}
-    @transitionTo 'project-talk-search', @props.params, query
+  contextTypes:
+    geordi: PropTypes.object
+
+  logGeordi: ->
+    @context.geordi?.logEvent
+      type: "breadcrumb"
+
+  componentWillMount: ->
+    @context?.geordi?.logEvent type: 'talk-view'
 
   render: ->
+    [owner, name] = @props.project.slug.split('/')
+
     <div className="project-text-content talk project">
+      <Helmet title="#{@props.project.display_name} » #{counterpart 'projectTalk.title'}" />
       <div className="content-container">
+        <h1 className="talk-main-link">
+          <Link to="/projects/#{owner}/#{name}/talk" onClick={@logGeordi.bind null, this}>
+            {@props.project.display_name} Talk
+          </Link>
+        </h1>
         <TalkBreadcrumbs {...@props} />
 
-        <form className="talk-search-form" onSubmit={@onSearchSubmit}>
-          <input type="text"
-            defaultValue={@props.query?.query}
-            placeholder="Search..."
-            ref="projectTalkSearchInput">
-          </input>
-          <button type="submit">
-            <i className="fa fa-search" />
-          </button>
-        </form>
-        <RouteHandler {...@props} section={projectSection(@props.project)}/>
+        <TalkSearchInput {...@props} />
+
+        {React.cloneElement @props.children, {section: projectSection(@props.project), project: @props.project, user: @props.user}}
+
+        <TalkFootnote />
       </div>
     </div>

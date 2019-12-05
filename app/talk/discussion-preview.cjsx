@@ -1,58 +1,76 @@
 React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
 {Link} = require 'react-router'
 resourceCount = require './lib/resource-count'
-{State} = require 'react-router'
-PromiseRenderer = require '../components/promise-renderer'
 LatestCommentLink = require './latest-comment-link'
-Thumbnail = require '../components/thumbnail'
-apiClient = require '../api/client'
-talkClient = require '../api/talk'
 getSubjectLocation = require '../lib/get-subject-location'
 
-module?.exports = React.createClass
+# `import Thumbnail from '../components/thumbnail';`
+Thumbnail = require('../components/thumbnail').default
+
+module.exports = createReactClass
   displayName: 'TalkDiscussionPreview'
 
   propTypes:
-    discussion: React.PropTypes.object
+    discussion: PropTypes.object
+
+  getDefaultProps: ->
+    project: {}
+
+  discussionLink: ->
+    {discussion} = @props
+
+    if (@props.params?.owner and @props.params?.name) # get from url if possible
+      {owner, name} = @props.params
+      "/projects/#{owner}/#{name}/talk/#{discussion.board_id}/#{discussion.id}"
+
+    else if @props.project.slug # otherwise fetch from project
+      [owner, name] = @props.project.slug.split('/')
+      "/projects/#{owner}/#{name}/talk/#{discussion.board_id}/#{discussion.id}"
+
+    else # link to zooniverse main talk
+      "/talk/#{discussion.board_id}/#{discussion.id}"
 
   render: ->
     {params, discussion} = @props
+    comment = @props.comment or discussion.latest_comment
 
     <div className="talk-discussion-preview">
       <div className="preview-content">
 
-        <PromiseRenderer catch={null} promise={talkClient.type('comments').get(discussion.links.comments[0])}>{(comment) =>
-          if comment.focus_id and (comment.focus_type is 'Subject')
-            <div className="subject-preview">
-              <PromiseRenderer catch={null} promise={apiClient.type('subjects').get(comment.focus_id)}>{(subject) =>
-                <Thumbnail src={getSubjectLocation(subject).src} width={100} />
-              }</PromiseRenderer>
-            </div>
-          else
-            null
-        }</PromiseRenderer>
+        {if @props.subject?
+          subject = getSubjectLocation(@props.subject)
+          <div className="subject-preview">
+            <Link to={@discussionLink()}>
+              <Thumbnail
+                src={subject.src}
+                type={subject.type}
+                format={subject.format}
+                width={100}
+                height={150}
+                controls={false}
+              />
+            </Link>
+          </div>
+        }
 
         <h1>
           {<i className="fa fa-thumb-tack talk-sticky-pin"></i> if discussion.sticky}
-          {if params?.owner and params?.name # get from url if possible
-            <Link to="project-talk-discussion" params={board: discussion.board_id, discussion: discussion.id, owner: params.owner, name: params.name}>
-              {discussion.title}
-            </Link>
-
-          else if @props.project # otherwise fetch from project
-            [owner, name] = @props.project.slug.split('/')
-            <Link to="project-talk-discussion" params={board: discussion.board_id, discussion: discussion.id, owner: owner, name: name}>
-              {discussion.title}
-            </Link>
-
-          else # link to zooniverse main talk
-            <Link to="talk-discussion" params={board: discussion.board_id, discussion: discussion.id}>
-              {discussion.title}
-            </Link>
-            }
+          <Link to={@discussionLink()}>
+            {discussion.title}
+          </Link>
         </h1>
 
-        <LatestCommentLink {...@props} project={@props.project} discussion={discussion} />
+        <LatestCommentLink
+          {...@props}
+          project={@props.project}
+          discussion={discussion}
+          comment={@props.comment}
+          author={@props.author}
+          roles={@props.roles}
+          preview={true}
+        />
 
       </div>
       <div className="preview-stats">

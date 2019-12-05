@@ -1,10 +1,11 @@
 React = require 'react'
-apiClient = require '../api/client'
+createReactClass = require 'create-react-class'
+apiClient = require 'panoptes-client/lib/api-client'
 putFile = require '../lib/put-file'
 
 NOOP = Function.prototype
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'SubjectUploader'
 
   getDefaultProps: ->
@@ -66,7 +67,9 @@ module.exports = React.createClass
         .then (subject) =>
           uploads = for typeToUploadURL, i in subject.locations
             uploadURL = typeToUploadURL[Object.keys(typeToUploadURL)[0]]
-            putFile uploadURL, @props.files[subjectData.locations[i]]
+            headers =
+              'Content-Type': locationTypes[i]
+            putFile uploadURL, @props.files[subjectData.locations[i]], headers
           Promise.all(uploads).then (uploads) =>
             @setState
               creates: @state.creates.concat subject

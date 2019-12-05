@@ -1,3 +1,80 @@
+@keyframes be-slightly-annoying
+  0%
+    transform: rotate(0);
+  25%
+    transform: rotate(2deg);
+  75%
+    transform: rotate(-2deg);
+  100%
+    transform: rotate(0);
+
+.get-attention
+  animation: be-slightly-annoying 0.3s infinite
+
+.pulsar-hunters-feedback
+  background: #666
+  box-shadow: 0 1px 3px rgba(black, 0.5)
+  border-radius: 3px
+  color: white
+  font-weight: bold
+  margin: 0.5em 0
+  padding: 1px 1em
+  text-align: center
+
+  &[data-is-correct]
+    background: #060
+
+  button
+    @extends $reset-button
+    text-decoration: underline
+
+.classify-page
+  background-color: PROJECT_BACKGROUND
+  position: relative
+
+  &--dark-theme
+    background-color: PROJECT_BACKGROUND_DARK
+    color: white
+
+    .classify-page__theme-button
+      &:hover, &:focus
+        text-decoration: underline
+
+  .classifier-announcement-banner
+    @extends $announcement-banner
+    margin: 0 0 1.5em
+
+    &--yellow
+      background: HIGHLIGHT_COLOR
+
+    &.custom-sign-in-banner
+      background-color: SECOND_HIGHLIGHT
+      display: flex
+      justify-content: space-between
+      margin: 0 0 3vh
+
+      p
+        display: inline-block
+
+  .anouncement-banner--group
+    @extends $announcement-banner
+    background-color: SUCCESS
+    margin: 1em auto
+    max-width: 400px
+
+  &__theme-button-wrapper
+    text-align: center
+
+  &__theme-button
+    @extends $reset-button
+    color: TEAL_MID
+    font-size: 0.9em
+    letter-spacing: 0.2em
+    text-transform: uppercase
+
+    &:hover, &:focus
+      text-decoration: underline
+
 .classifier
   display: flex
   justify-content: center
@@ -5,28 +82,40 @@
   @media (max-width: 900px) // This is between iPad landscape and portrait.
     flex-wrap: wrap
 
-  > .subject-area
-    align-items: center
-    justify-content: center
-    display: flex
-    flex-shrink: 1
-    flex-direction: column
-    margin: 0 1.5vw 1em 0
-    min-width: 0
+  > .subject-viewer
+    flex: 0 1 auto
+
+  &--dev
+    flex-wrap: wrap;
+
+    > .subject-viewer
+      flex-basis: 50%;
+
+    > .classifier--dev__tools
+      width: 100%
 
   .subject-container
     color: gray
     max-width: 100%
 
+    > *
+      display: flex
+      flex: 1 1 auto
+
+  .task-container
+    margin-bottom: 1.3333rem
+    padding: 0 2em 0 2em
+
   .subject
-    border-radius: 5px
     box-shadow: 0 0 0 1px gray
     max-height: 90vh
     max-width: 100%
-    user-select: none
 
   .marking-initializer
     cursor: crosshair
+
+    &[data-disabled]
+      cursor: not-allowed
 
   .loading-cover
     align-items: center
@@ -42,9 +131,38 @@
     top: 0
     width: 100%
 
+  .subject-image-frame
+    img
+      display: block
+
   .subject-tools
     display: flex
     justify-content: space-between
+
+    @media (max-width: 900px)
+      &__play
+        position: relative
+
+      &__play:after
+        content:''
+        position:absolute;
+        bottom: -0.5em
+        left: -0.5em
+        right: -0.5em
+        top: -0.5em
+
+  .subject-frame-duration
+    display: inline-block;
+
+    &--slower
+      margin-right: -.4em
+
+    &--range
+      max-width: 5em
+      vertical-align: -.3em;
+
+    &--faster
+      margin-left: -.4em
 
   .subject-frame-pip
     @extends $reset-button
@@ -75,56 +193,27 @@
     top: 0
     transform: rotate(-15deg)
 
-  > .task-area
-    flex: 1 1
-    margin-bottom: 1em
-    max-width: 60ch
-    min-width: 30ch
+  // for subject images that are not height contained
+  // this class name is enabled through a workflow config
+  &.large-image
+    .subject
+      max-height: none
 
   .task-nav
     display: flex
-    margin-top: 1em
-
-    .back
-      flex: 1 0
-
-    .talk
-      flex: 2 0
-
-    .continue
-      flex: 3 0
+    padding: 0 2em 0 2em
 
     > :not(:first-child)
       margin-left: 0.5em
 
 .workflow-task
-  .answer
-    align-items: center
-    display: flex
-    margin: 0.5em 0
-    text-align: left
-
-    > input,
-    > .drawing-tool-icon
-      flex-shrink: 0
-      line-height: 1
-      margin-right: 0.5em
-
-    > .markdown > p:first-child:last-child
-      margin: 0
-
-    > .tool-count
-      margin-left: 0.5em
-      opacity: 0.7
-
-  .drawing-tool-icon > svg
-    fill-opacity: 0.1
-    height: 1.5em
-    stroke: currentColor
-    stroke-width: 5
-
-  .drawing-tool-input
-    display: none
-
   & + .workflow-task
     margin-top: 2em
+
+.unlinked-shortcut
+  p
+    margin: 0.5em 0
+
+  &.active
+    label
+      background: MAIN_HIGHLIGHT

@@ -1,7 +1,9 @@
 counterpart = require 'counterpart'
 React = require 'react'
+createReactClass = require 'create-react-class'
+ReactDOM = require 'react-dom'
 Translate = require 'react-translate-component'
-LoadingIndicator = require '../components/loading-indicator'
+LoadingIndicator = require('../components/loading-indicator').default
 
 counterpart.registerTranslations 'en',
   loginChangeForm:
@@ -10,7 +12,7 @@ counterpart.registerTranslations 'en',
     login: "Login"
     submit: "Set Login"
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: "LoginChangeForm"
 
   getInitialState: ->
@@ -25,7 +27,7 @@ module.exports = React.createClass
           @props.onSuccess user
       .catch (e) =>
         @setState {busy: false, error: e}, =>
-          @getDOMNode().querySelector('[name="login"]')?.focus()
+          ReactDOM.findDOMNode(@).querySelector('[name="login"]')?.focus()
           @props.onFailure? user
 
   handleSubmit: (e) ->
@@ -62,5 +64,3 @@ module.exports = React.createClass
         <Translate content="loginChangeForm.submit" />
       </button>
     </form>
-
-

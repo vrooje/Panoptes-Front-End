@@ -1,64 +1,60 @@
 React = require 'react'
-apiClient = require '../../api/client'
-{Navigation} = require 'react-router'
-Loading = require '../../components/loading-indicator'
-FEATURED_PRODUCT_IDS = require '../../lib/featured-projects'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+talkClient = require 'panoptes-client/lib/talk-client'
+{Link} = require 'react-router'
+Loading = require('../../components/loading-indicator').default
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'ProjectLinker'
-  mixins: [Navigation]
+
+  contextTypes:
+    geordi: PropTypes.object
 
   getInitialState: ->
     projects: []
+    meta: {}
     loading: true
 
-  componentWillMount: ->
-    @setProjects()
+  componentWillReceiveProps: (nextProps, nextContext)->
+    @logClick = nextContext?.geordi?.makeHandler? 'change-project-sidebar'
 
-  shouldComponentUpdate: (nextProps, nextState) ->
-    nextState.projects isnt @state.projects
+  componentDidMount: ->
+    @loadMoreProjects()
 
-  goToProjectTalk: (projectId) ->
-    for project in @state.projects
-      break if project.id is projectId
+  loadMoreProjects: (page = 1) ->
+    talkClient.type('projects').get(page: page).then (projects) =>
+      meta = projects[0]?.getMeta() or {}
+      projects = @state.projects.concat projects
+      @setState {projects, meta, loading: false}
 
+  projectLink: (project, i) ->
     [owner, name] = project.slug.split('/')
-    @transitionTo 'project-talk',
-      owner: owner
-      name: name
 
-  setProjects: (metadata) ->
-    # query =
-    #   launch_approved: true
-    #   include: 'owners'
+    <div key={project.id}>
+      <Link to="/projects/#{owner}/#{name}/talk" onClick={@logClick?.bind(this, project.display_name)}>
+        {project.display_name}
+      </Link>
+    </div>
 
-    # For launch, since I can't filter by if a project has a redirect or not.
-    query = FEATURED_PRODUCT_IDS
+  onClickLoadMore: (e) ->
+    @loadMoreProjects @state.meta.next_page
 
-    apiClient.type('projects').get(query)
-      .then (projects) =>
-        @setState {projects, loading: false}
-
-  onChangeSelect: ->
-    projectsSelect = React.findDOMNode @.refs.projectsSelect
-    @goToProjectTalk projectsSelect.value
-
-  projectOption: (d, i) ->
-    <option key={d.id} value={d.id}>
-      {d.display_name}
-    </option>
-    
   render: ->
-    if @state.loading
-      <Loading />
+    <div>
+      {if @state.loading
+        <Loading />
+      else
+        <div className="project-linker">
+          <div><Link to="/talk">Zooniverse Talk</Link></div>
 
-    else if @state.projects.length
-      <div className="project-linker">
-        <select onChange={@onChangeSelect} defaultValue="defaultValue" ref="projectsSelect">
-          <option key={Math.random()}  value="defaultValue" disabled>Jump to a project</option>
-          {@state.projects.map(@projectOption)}
-        </select>
-      </div>
+          <div>{@state.projects?.map(@projectLink)}</div>
 
-    else
-      <p>Error retreiving projects list.</p>
+          {if @state.meta?.next_page
+            <button
+              type="button"
+              onClick={@onClickLoadMore}>
+              Load more <i className="fa fa-arrow-down" />
+            </button>}
+        </div>}
+    </div>

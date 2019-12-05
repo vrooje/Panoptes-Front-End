@@ -1,16 +1,17 @@
 $survey-task-pill-button
   border: 1px solid rgba(gray, 0.5)
-  border-radius: 3px
+  border-radius: 0
   padding: 0 0.4em
 
 .survey-identification-proxy
-  background: goldenrod
+  position: relative
+  background: HIGHLIGHT
   border-radius: 3px
   color: white
   display: inline-block
-  font-size: 10px
+  font-size: 12px
   font-weight: bold
-  padding: 0 0.5em
+  padding: 0.25em 0.75em
 
 .survey-identification-remove
   @extends $reset-button
@@ -25,98 +26,202 @@ $survey-task-pill-button
 .survey-task-chooser
   font-size: 12px
 
+// Temporary until the survey filters can be redone according to new design
+.survey-task-chooser__divider
+  color: #A6A7A9;
+  margin: 5px 0
+
 .survey-task-chooser-characteristics
-  background: rgba(gray, 0.4)
-  border-radius: 5px 5px 0 0
-  padding: 3px
+  display: flex
+  flex-wrap: wrap
+
+  > *
+    flex-grow: 1
+    margin: 0 2px 2px 0
+
+  .modal-form-trigger
+    @extends $reset-button
+    background-color: BACKGROUND_COLOR
+    color: black
+    cursor: pointer
+    height: 25px
+    margin-bottom: 1px
+    margin-right: 1px
+    min-width: 60px
+    text-transform: capitalize
+
+    &:hover, &:focus
+      background-color: #f6f6f6
+
+    &[aria-expanded="true"]
+      background-color:#f6f6f6
 
 .survey-task-chooser-characteristic
-  background: white
-  border-radius: 3px
-  color: black
-  padding: 0 0.5em
+  display: block
+
+.survey-task-chooser-characteristic-menu
+  .modal-form
+    background-color: #dddddd
+    border-radius: 0
+    padding: 0
+
+  .modal-form-pointer
+    background-color: #dddddd
+
+  .survey-task-chooser-characteristic-menu-container
+    display: flex
+    flex-wrap: wrap
+    padding: 0.4em
+
+  .survey-task-chooser-characteristic-clear-button
+    @extends $reset-button
+    background-color: transparent
+    font-size: 0.8em
+    height: 48px
+    width: 48px
 
 .survey-task-chooser-characteristic-value
   @extends $reset-button
+  background-color: #c1c1c1
+  cursor: pointer
+  font-size: 0.8em
+  height: 48px
+  margin: 0 0.2em 0.75em 0
+  width: 48px
+
+  &:disabled
+    opacity: 1
+
+  &[data-selected="true"]
+    background-color: #a4a4a4
+
+.survey-task-chooser-characteristic-value-label
+  background-color: #a4a4a4
+  color: white
+  font-size: 0.8em
+  font-weight: 700
+  line-height: 30px
+  text-align: center
+  text-transform: capitalize
+  width: 100%
 
 .survey-task-chooser-characteristic-value-icon
   border-radius: 3px
   display: block
-
-.survey-task-chooser-characteristic-clear-button
-  @extends $reset-button
+  margin: 0 auto
+  max-height: 3em
 
 .survey-task-chooser-choices
-  background: rgba(gray, 0.2)
+  background: white
   display: flex
   flex-wrap: wrap
-  padding: 3px
 
-  > *
-    flex-grow: 1
+  &[data-columns="3"] > *
+    flex-basis: calc(33.33% - 1px)
+    max-width: calc(33.33% - 1px) // temporary fix for an overflowing button text
 
-  &[data-breakpoint="Infinity"] > *,
-  &[data-breakpoint="40"] > *
-    flex-basis: 30%
+  &[data-columns="2"] > *
+    flex-basis: calc(50% - 2px)
 
-  &[data-breakpoint="20"] > *,
-  &[data-breakpoint="10"] > *
-    flex-basis: 45%
+  &[data-columns="1"] > *
+    flex-basis: calc(100% - 2px)
 
-  &[data-breakpoint="5"] > *
-    flex-basis: 95%
+  &[data-columns="1"]
+    .survey-task-chooser-choice-button:not(:first-of-type)
+      border-top: 1px solid BACKGROUND_COLOR
 
-.survey-task-chooser-choice
+  &[data-columns="2"]
+    .survey-task-chooser-choice-button
+      &:nth-of-type(odd)
+        border-right: 1px solid BACKGROUND_COLOR
+      &:not(:nth-of-type(1)):not(:nth-of-type(2))
+        border-top: 1px solid BACKGROUND_COLOR
+
+  &[data-columns="3"]
+    .survey-task-chooser-choice-button
+      &:nth-of-type(3n+1) // first column in a 3 column layout
+        border-right: 1px solid BACKGROUND_COLOR
+
+      &:nth-of-type(3n+2):not(:nth-of-type(2)) // second column in a 3 column layout
+        border-top: 1px solid BACKGROUND_COLOR
+
+      &:nth-of-type(3n+3) // third column in a 3 column layout
+        border-left: 1px solid BACKGROUND_COLOR
+
+      &:not(:first-of-type):not(:nth-of-type(2)):not(:nth-of-type(3))
+        border-top: 1px solid BACKGROUND_COLOR
+
+.survey-task-chooser-choice-button
   @extends $reset-button
   align-items: center
   background: white
-  border-radius: 3px
   color: black
   display: flex
-  margin: 1px
   text-align: left
 
+  &:hover, &:focus
+    background: TEAL_LIGHT
+
   > *
-    margin: 0.4em
+    margin: 0.3em 0.6em
+
+.survey-task-chooser-choice-button-chosen
+  background: TEAL_MID
+  color: white
+
+  &:hover, &:focus
+    color: black
+
+.survey-task-chooser-choice
+  display: flex
+  justify-content: flex-start
+  align-items: center
 
 .survey-task-chooser-choice-thumbnail
-  border-radius: 3px
+  background-size: cover
+  background-position: 50% 50%
   display: inline-block
+  margin-right: 1ch
   vertical-align: middle
 
-  [data-breakpoint="Infinity"] &,
-  [data-breakpoint="40"] &
+  THUMBNAIL_ASPECT_RATIO = 1.25
+
+  [data-thumbnail-size="none"] &
     display: none
 
-  [data-breakpoint="20"] &
-    height: 2em
+  [data-thumbnail-size="large"] &
+    height: 6em
+    width: @height * THUMBNAIL_ASPECT_RATIO
 
-  [data-breakpoint="10"] &
-    height: 4em
+  [data-thumbnail-size="medium"] &
+    height: 3em
+    width: @height * THUMBNAIL_ASPECT_RATIO
 
-  [data-breakpoint="5"] &
-    height: 8em
+  [data-thumbnail-size="small"] &
+    height: 1.5em
+    width: @height * THUMBNAIL_ASPECT_RATIO
 
 .survey-task-chooser-choice-label
   display: inline-block
 
-  [data-breakpoint="5"] &
+  [data-columns="1"] &
     font-size: 1.5em
+
+.survey-task-chooser-characteristic-clear-button
+  @extends $reset-button
 
 .survey-task-image-flipper
   display: block
   position: relative
 
 .survey-task-image-flipper-image
-  border-radius: 5px
   display: block
   width: 100%
 
 .survey-task-image-flipper-pips
-  bottom: 10px
-  left: 50%
-  position: absolute
-  transform: translateX(-50%)
+  margin: 2px 0
+  position: relative
+  text-align: center
 
 .survey-task-image-flipper-pip
   @extends $reset-button
@@ -124,15 +229,34 @@ $survey-task-pill-button
   border: 2px solid
   border-radius: 50%
   color: white
-  height: 1em
+  display: inline-block
+  height: .5em
   overflow: hidden
   text-indent: 1em
-  width: 1em
+  width: .5em
+
+  input[type=radio]
+    position: absolute
+    opacity: 0.01
+    left: -100px
+
+  &.active
+    opacity: .3
 
 .survey-task-choice
+  background:  #f7f7f7
+  color: #6b6a6a
+  display: block
   font-size: 14px
+  justify-content: space-between
+  height: 100%
+  padding: 1em
+
+.survey-task-choice-content
+  position: relative
 
 .survey-task-choice-label
+  color: #3c3c3c
   font-weight: bold
   margin: 0.5em 0
 
@@ -143,20 +267,134 @@ $survey-task-pill-button
   font-size: 0.8em
   margin: 0.5em 0
 
+  .modal-form-trigger
+    @extends $reset-button
+    background: #e8e8e8
+    border-radius: 0
+    cursor: pointer
+    font-size: 10px
+    margin: 0 3px 0 0
+    padding: 0.5em 0.75em
+
+    &:hover, &:focus
+      background: rgba(208, 208, 208, 1)
+      color: rgba(107, 107, 107, 1)
+
+.survey-task-confusions-modal
+  .dropdown-form-underlay
+    background-color: rgba(0,0,0,0.5)
+
+  .dropdown-form
+    background: #f7f7f7
+    color: #6b6a6a
+    padding: 1em
+
+    .survey-task-choice-confusion-buttons
+      button
+        @extends $reset-button
+        color: #fff
+        font-weight: 700
+        padding: 0.8em 0
+        text-align: center
+        width: 48%
+
+        &.cancel
+          background-color: #404040
+
+        &.identify
+          background-color: #4caa81
+
 .survey-task-choice-confusion
   @extends $survey-task-pill-button
+  border: none
 
 .survey-task-choice-question
-  font-size: 0.8em
-  margin: 0.5em 0
+  margin: 0.4em 0 1.3em
+
+.survey-task-choice-question-label
+  font-size: 12px
+  margin: 0 0 6px 0
+
+.survey-task-choice-answers
+  display: flex
+  flex-direction: row
+  flex-wrap: wrap
 
 .survey-task-choice-answer
-  @extends $survey-task-pill-button
+  background: rgba(232, 232, 232, 1)
+  border: 1px transparent solid
   cursor: pointer
+  font-size: 10px
+  line-height: 30px
+  margin: 0 3px 0 0
+  padding: 0.5em 0.75em
+  white-space: nowrap
+
+  &:hover
+    background: rgba(208, 208, 208, 1)
+    color: rgba(107, 107, 107, 1)
 
   &[data-checked]
     background: MAIN_HIGHLIGHT
     color: white
 
+  &[data-focused]
+    border: 1px MAIN_HIGHLIGHT solid
+    color: white
+
+  span
+    cursor: pointer
+
   > input
-    display: none
+    opacity: 0.01
+    position: absolute
+
+.warning
+  background-color: rgba(HIGHLIGHT_COLOR, 0.5)
+
+.details
+  &:hover
+    cursor: pointer
+
+.survery-editor-input
+  border: thin solid black
+
+  .tabs
+    display: flex
+
+    > :first-child
+      border-right: thin solid black
+
+    .tab-active
+      flex-grow: 1
+      text-align: center
+      padding: 0.5em 0.75em
+      margin-right: 0
+
+    .tab-inactive
+      @extends .survery-editor-input .tabs .tab-active
+      background-color: rgba(FOREGROUND, 0.5)
+      border-bottom: thin solid black
+
+      &:hover
+        background-color: rgba(FOREGROUND, 0.2)
+        cursor: pointer
+
+  .tab-content
+    padding: 0.5em 0.75em
+
+    .columns-container
+      > :not(:last-child)
+        margin-right: 0.1vw
+
+  .apply
+    margin: 0.5em 1.5em
+
+  .clear
+    margin: 0.5em 1.5em
+    background-color: MAIN_HIGHLIGHT
+
+  .filename
+    min-width: 35%
+    overflow: auto
+    align-self: center

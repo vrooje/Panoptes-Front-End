@@ -1,37 +1,39 @@
 React = require 'react'
-PromiseRenderer = require '../../components/promise-renderer'
-talkClient = require '../../api/talk'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+talkClient = require 'panoptes-client/lib/talk-client'
 userIsModerator = require './user-is-moderator'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'Moderation'
 
   propTypes:
-    section: React.PropTypes.string.isRequired # talk section
-    user: React.PropTypes.object.isRequired
-
+    section: PropTypes.string.isRequired # talk section
+    user: PropTypes.object.isRequired
+  
   getInitialState: ->
-    open: false
+    roles: []
 
-  toggleModeration: (e) ->
-    @setState open: !@state.open
+  componentWillMount: ->
+    @updateRoles @props
+
+  componentWillReceiveProps: (newProps) ->
+    @updateRoles newProps
+
+  updateRoles: (props) ->
+    {section, user} = props
+    talkClient.type 'roles'
+      .get
+        user_id: user.id
+        section: ['zooniverse', section]
+        page_size: 100
+      .then (roles) =>
+        @setState {roles}
 
   render: ->
-    {section} = @props
-
-    <div>
-      <PromiseRenderer pending={null} promise={talkClient.type('roles').get(user_id: @props.user.id, section: ['zooniverse', section], page_size: 100)}>{(roles) =>
-        if userIsModerator(@props.user, roles, section)
-          <div className="talk-moderation">
-            <button onClick={@toggleModeration}>
-              <i className="fa fa-#{if @state.open then 'close' else 'warning'}" /> Moderator Controls
-            </button>
-            <div className="talk-moderation-children #{if @state.open then 'open' else 'closed'}">
-              {if @state.open
-                  @props.children
-                else
-                  null}
-            </div>
-          </div>
-      }</PromiseRenderer>
-    </div>
+    {section, user} = @props
+    {roles} = @state
+    if userIsModerator(user, roles, section)
+      @props.children
+    else
+       null

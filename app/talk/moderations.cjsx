@@ -1,54 +1,48 @@
 React = require 'react'
-talkClient = require '../api/talk'
-apiClient = require '../api/client'
-auth = require '../api/auth'
-PromiseRenderer = require '../components/promise-renderer'
-ChangeListener = require '../components/change-listener'
-Markdown = require '../components/markdown'
-CommentLink = require '../pages/profile/comment-link'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+talkClient = require 'panoptes-client/lib/talk-client'
+auth = require 'panoptes-client/lib/auth'
 Paginator = require './lib/paginator'
-Loading = require '../components/loading-indicator'
-{Link} = require 'react-router'
-PAGE_SIZE = require('./config').moderationsPageSize
-{Navigation} = require 'react-router'
-merge = require 'lodash.merge'
-projectSection = require './lib/project-section'
-userIsModerator = require './lib/user-is-moderator'
+Loading = require('../components/loading-indicator').default
+page_size = require('./config').moderationsPageSize
+updateQueryParams = require './lib/update-query-params'
+ModerationComment = require './moderation/comment'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'TalkModerations'
-  mixins: [Navigation]
+
+  contextTypes:
+    router: PropTypes.object.isRequired
 
   getInitialState: ->
     moderations: []
     moderationsMeta: {}
     user: null
     loading: true
-    filter: null
 
   getDefaultProps: ->
-    query:
-      page: 1
+    foo: 'bar'
+    location:
+      query:
+        page: 1
+        state: 'opened'
 
   componentDidMount: ->
-    @setModerations(@props.query.page)
+    @props.location.query.state or= 'opened'
+    @setModerations()
 
   componentWillReceiveProps: (nextProps) ->
-    unless nextProps.query.page is @props.query.page
-      @setModerations(nextProps.query.page)
+    @setModerations nextProps.location.query
 
-  setModerations: (page) ->
+  setModerations: ({page, state} = { }) ->
+    page or= @props.location.query.page
+    state or= @props.location.query.state
+    section = @props.section
+
     @setState loading: true
-    @setModerationsForSection(page, @props.section)
-
-  setModerationsForSection: (page, section) ->
-    moderationParams = merge {},
-      {page: page, page_size: PAGE_SIZE},
-      if @state.filter? then {state: @state.filter} else {},
-      if section then {section} else {}
-
-    auth.checkCurrent().then (user) => if user?
-      talkClient.type('moderations').get(moderationParams)
+    auth.checkCurrent().then (user) =>
+      talkClient.type('moderations').get({section, state, page, page_size})
         .then (moderations) =>
           moderationsMeta = moderations[0]?.getMeta()
           @setState {user, moderations, moderationsMeta, loading: false}
@@ -56,105 +50,52 @@ module?.exports = React.createClass
           @setState {loading: false}
           throw new Error(e)
 
-  updateModeration: (moderation, action) ->
-    if ['destroy', 'ignore', 'watch', 'open'].indexOf(action) is -1
-      throw new Error("Moderation update action must be one of ['destroy', 'ignore', 'watch', 'open']")
+  updateModeration: (moderation, action, message) ->
+    user_id = @state.user.id
+    moderation.update(actions: [{user_id, action, message}]).save().then =>
+      @setModerations()
 
-    updateParams =
-      actions: [{
-        user_id: @state.user.id
-        action: action
-        message: "#{action}ing"
-        }]
+  filterByAction: (action) ->
+    updateQueryParams @context.router, state: action
 
-    moderation.update(updateParams).save()
-      .then (updatedModeration) => @setModerations()
-
-  report: (report, i) ->
-    <div key={report.id}>
-      <PromiseRenderer promise={apiClient.type('users').get(report.user_id.toString())}>{(user) =>
-        <li>
-          <Link to="user-profile" params={name: user.login}>{user.display_name}</Link>: {report.message}
-        </li>
-      }</PromiseRenderer>
-    </div>
-
-  comment: (comment, moderation) ->
-    <div key={comment.id}>
-      <h1>Comment {comment.id} Reports</h1>
-      <ul>{moderation.reports.map(@report)}</ul>
-
-      <CommentLink comment={comment} />
-
-      <div className="moderations-actions-buttons">
-        <p>Status: <strong>{moderation.state}</strong></p>
-        {if moderation.state isnt 'closed'
-          comment.moderatable_actions
-            .filter (action) =>
-              (moderation.state.indexOf(action) is -1) and (action isnt 'report')
-            .map (action) =>
-              if action is 'destroy'
-                <button key={action} className="moderations-#{action}" onClick={=>
-                  if window.confirm("Are you sure that you want to delete the reported comment?")
-                    @updateModeration(moderation, action)
-                }>{action}</button>
-              else
-                <button key={action} className="moderations-#{action}" onClick={=> @updateModeration(moderation, action)}>{action}</button>
-          }
-
-      </div>
-    </div>
-
-  moderation: (moderation, i) ->
-    <div key={moderation.id} className="talk-module">
-      <PromiseRenderer promise={talkClient.type('comments').get(moderation.target_id)}>{(comment) =>
-        <div>{@comment(comment, moderation)}</div>
-      }</PromiseRenderer>
-    </div>
+  nameOf: (action) ->
+    switch action
+      when 'closed' then 'deleted'
+      when 'all' then 'all reports'
+      else
+        action
 
   render: ->
-    {moderations} = @state
-    {owner, name} = @props.params
+    return <p>You must be logged in to view this page</p> unless @props.user
+    state = @props.location.query.state
 
-    if @props.user?
-      roles = talkClient.type('roles').get(user_id: @props.user.id, page_size: 100)
-      <PromiseRenderer promise={roles}>{(roles) =>
-        if userIsModerator(@props.user, roles, @props.section)
-          <div className="talk moderations">
-            <section>
-              <button
-                key='all-reports'
-                onClick={=> @setState filter: null, @setModerations}
-                className={if @state.filter is null then 'active' else ''}>
-                All reports
-              </button>
+    <div className="talk moderations">
+      <section>
+        {['all', 'opened', 'ignored', 'closed'].map (action) =>
+          <button
+            key={action}
+            onClick={=> @filterByAction(action)}
+            className={if state is action then 'active' else ''}>
+            {@nameOf(action)}
+          </button>}
+      </section>
 
-              {['opened', 'ignored', 'closed'].map (action) =>
-                <button
-                  key={action}
-                  onClick={=> @setState {filter: action}, @setModerations}
-                  className={if @state.filter is action then 'active' else ''}>
-                  {action}
-                </button>
-                }
-            </section>
+      <div>
+        {if @state.loading
+           <Loading />
+        else if @state.moderations.length > 0
+          <div>
+            {for moderation in @state.moderations
+              <ModerationComment {...@props}
+                key={"moderation-#{moderation.id}"}
+                moderation={moderation}
+                updateModeration={@updateModeration} />}
 
-            {if @state.loading
-               <Loading />
-             else if moderations?.length > 0
-               <div>{moderations?.map(@moderation)}</div>
-             else
-               <p>There are not currently any reports that require moderation.</p>
-               }
-
-            {if +@state.moderationsMeta?.page_count > 1
-              <Paginator
-                page={@state.moderationsMeta.page}
-                pageCount={@state.moderationsMeta.page_count} />
-              }
+            <Paginator
+              page={+@state.moderationsMeta.page}
+              pageCount={+@state.moderationsMeta.page_count} />
           </div>
         else
-          <p>You must be a moderator to view this page</p>
-      }</PromiseRenderer>
-    else
-      <p>You must be logged in to view this page</p>
+          <p>There are not currently any {@nameOf(state) unless state is 'all'} moderations.</p>}
+      </div>
+    </div>

@@ -1,57 +1,37 @@
 React = require 'react'
-PromiseRenderer = require '../components/promise-renderer'
-parseSection = require './lib/parse-section'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
 talkConfig = require './config'
-{Link, Navigation} = require 'react-router'
+{Link} = require 'react-router'
 
 PAGE_SIZE = talkConfig.discussionPageSize
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'TalkCommentLink'
-  mixins: [Navigation]
 
   propTypes:
-    comment: React.PropTypes.object  # Comment resource
-    pageSize: React.PropTypes.number # Optional: pass this in to override default PAGE_SIZE
+    comment: PropTypes.object  # Comment resource
+    pageSize: PropTypes.number # Optional: pass this in to override default PAGE_SIZE
 
   getDefaultProps: ->
     pageSize: PAGE_SIZE
 
   projectComment: ->
-    console.log @props.comment.section, 'zooniverse'
     @props.comment.section isnt 'zooniverse'
 
   projectCommentUrl: ->
     {comment} = @props
-    [ownerName, projectName] = comment.project_slug.split('/')
-    href = @makeHref 'project-talk-discussion',
-      {
-        board: comment.board_id,
-        discussion: comment.discussion_id,
-        owner: ownerName,
-        name: projectName
-      },
-      {
-        comment: comment.id
-      }
-    window.location.origin + window.location.pathname + href
+    "/projects/#{comment.project_slug}/talk/#{comment.board_id}/#{comment.discussion_id}?comment=#{comment.id}"
 
   mainTalkCommentUrl: ->
     {comment} = @props
-    window.location.origin + window.location.pathname +
-    @makeHref 'talk-discussion',
-      {board: comment.board_id, discussion: comment.discussion_id},
-      {comment: comment.id}
+    "/talk/#{comment.board_id}/#{comment.discussion_id}?comment=#{comment.id}"
 
   render: ->
-    <div className="talk-comment-link">
-      {if @projectComment()
-        <a href={@projectCommentUrl()}>
-          {@props.children ? @projectCommentUrl()}
-        </a>
+    href = if @projectComment() then @projectCommentUrl() else @mainTalkCommentUrl()
 
-      else
-        <a href={@mainTalkCommentUrl()}>
-          {@props.children ? @mainTalkCommentUrl()}
-        </a>}
+    <div className="talk-comment-link">
+      <Link to={href}>
+        {@props.children ? window.location.origin + href}
+      </Link>
     </div>

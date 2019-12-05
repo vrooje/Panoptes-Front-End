@@ -1,9 +1,13 @@
 React = require 'react'
+createReactClass = require 'create-react-class'
+ReactDOM = require 'react-dom'
 PromiseRenderer = require '../../components/promise-renderer'
 UserSearch = require '../../components/user-search'
-apiClient = require '../../api/client'
-talkClient = require '../../api/talk'
+apiClient = require 'panoptes-client/lib/api-client'
+talkClient = require 'panoptes-client/lib/talk-client'
 projectSection = require '../../talk/lib/project-section'
+isAdmin = require '../../lib/is-admin'
+getAllLinked = require('../../lib/get-all-linked').default
 
 ID_PREFIX = 'LAB_COLLABORATORS_PAGE_'
 
@@ -24,18 +28,18 @@ ROLES_INFO =
     description: 'Experts can enter "gold mode" to make authoritative gold standard classifications that will be used to validate data quality.'
   scientist:
     label: 'Researcher'
-    description: 'Members of the research team will be marked as scientists on "Talk"'
+    description: 'Members of the research team will be marked as researchers on "Talk"'
   moderator:
     label: 'Moderator'
     description: 'Moderators have extra privileges in the community discussion area to moderate discussions. They will also be marked as moderators on "Talk".'
   tester:
     label: 'Tester'
-    description: 'Testers can view and classify on your project to give feedback while it’s still private. They cannot access the project builder.'
+    description: 'Testers can view and classify on your project to give feedback while it’s still private. If given the direct url, they can also view and classify on inactive workflows; this is useful for already launched projects that are planning on building a new workflow and woud like volunteer feedback. Testers cannot access the project builder.'
   translator:
     label: 'Translator'
     description: 'Translators will have access to the translation site.'
 
-CollaboratorCreator = React.createClass
+CollaboratorCreator = createReactClass
   displayName: 'CollaboratorCreator'
 
   getDefaultProps: ->
@@ -46,6 +50,8 @@ CollaboratorCreator = React.createClass
     creating: false
 
   render: ->
+    @showTranslatorRole()
+
     style = if @state.creating
       opacity: 0.5
       pointerEvents: 'none'
@@ -55,7 +61,7 @@ CollaboratorCreator = React.createClass
         <p className="form-help error">{@state.error.toString()}</p>}
       <form style={style}>
         <div>
-          <UserSearch />
+          <UserSearch ref={(component) => @userSearch = component} />
         </div>
 
         <table className="standard-table">
@@ -75,11 +81,15 @@ CollaboratorCreator = React.createClass
       </form>
     </div>
 
+  showTranslatorRole: ->
+    if (@props.project.experimental_tools?.indexOf('translator-role') > -1) or isAdmin()
+      POSSIBLE_ROLES = Object.assign({}, POSSIBLE_ROLES, {translator: 'translator'});
+
   handleSubmit: (e) ->
     e.preventDefault()
-    checkboxes = @getDOMNode().querySelectorAll '[name="role"]'
-    userids = @getDOMNode().querySelector('[name="userids"]')
-    users = userids.value.split(',').map (id) -> parseInt(id)
+    node = ReactDOM.findDOMNode(@)
+    checkboxes = node.querySelectorAll '[name="role"]'
+    users = @userSearch.value().map (option) -> parseInt option.value
     roles = for checkbox in checkboxes when checkbox.checked
       checkbox.value
 
@@ -113,18 +123,21 @@ CollaboratorCreator = React.createClass
 
     Promise.all(roleSet.save() for roleSet in newRoles)
       .then =>
-        userids.value = ''
+        @userSearch.clear()
         for checkbox in checkboxes
           checkbox.checked = false
         @props.onAdd? arguments...
 
       .catch (error) =>
-        @setState error: error
+        if error.message.match /not allowed to create this role/i
+          error.message = 'Your account status on this project is still being setup. Please try again later.'
+
+        @setState {error}
 
       .then =>
         @setState creating: false
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'EditProjectCollaborators'
 
   getDefaultProps: ->
@@ -135,7 +148,7 @@ module.exports = React.createClass
     saving: []
 
   fetchAllRoles: ->
-    Promise.all([@props.project.get('project_roles'), talkClient.type('roles').get(section: @talkSection(), page_size: 100)])
+    Promise.all([getAllLinked(@props.project, 'project_roles'), talkClient.type('roles').get(section: @talkSection(), page_size: 100)])
       .then ([panoptesRoles, talkRoles]) ->
         for roleSet in panoptesRoles when roleSet.links.owner.type == 'users'
           roleSet['talk_roles'] = talkRoles.filter((role) -> role.links.user == roleSet.links.owner.id)
@@ -146,7 +159,7 @@ module.exports = React.createClass
       <div className="form-label">Project Owner</div>
       <PromiseRenderer promise={@props.project.get('owner')} then={(projectOwner) =>
         projectOwnerMessage = if @props.user.id is projectOwner.id
-          {'You are the project owner.'}
+          'You are the project owner.'
         else
           projectOwner.display_name + ' is the project owner.'
 

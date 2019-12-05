@@ -4,11 +4,11 @@
 .standard-button
   @extends $reset-button
   background: MAIN_HIGHLIGHT
-  border-radius: 3px
   color: white
   padding: 0.4em 1.4em
   text-align: center
 
+  &:focus,
   &:hover
     background: lighten(MAIN_HIGHLIGHT, 20%)
 
@@ -24,14 +24,17 @@
   background: SECOND_HIGHLIGHT
   font-weight: bold
 
+  &:focus,
   &:hover
     background: lighten(SECOND_HIGHLIGHT, 20%)
+
 
 .minor-button
   @extends .standard-button
   color: FOREGROUND
   background: lighten(#424242, 90%)
 
+  &:focus,
   &:hover
     background: lighten(#424242, 95%)
 
@@ -54,14 +57,14 @@
 
   .standard-button
     @extends $reset-button
-    background: COBOLT_BLUE
-    border-radius: 4px
+    background: TEAL_MID
     color: white
     font-size: 14px
     padding: 1em
 
+    &:focus,
     &:hover
-      background: lighten(COBOLT_BLUE, 20%)
+      background: lighten(TEAL_MID, 20%)
 
     &:disabled
       pointer-events: none
@@ -93,11 +96,16 @@
 .ghost-button
   @extends $reset-button
   background: transparent
-  border: 3px solid COBOLT_BLUE
-  border-radius: 4px
-  color: COBOLT_BLUE
+  border: 3px solid TEAL_MID
+  color: TEAL_MID
   position: static // position: relative inherited from $reset-button was causing inconsistent rendering in chrome
 
+  &:focus,
   &:hover
-    background: COBOLT_BLUE
+    background: TEAL_MID
     color: white
+
+.link-button
+  @extends $reset-button
+  @extends a
+  text-decoration: underline

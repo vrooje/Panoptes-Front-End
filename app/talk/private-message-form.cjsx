@@ -1,21 +1,32 @@
 React = require 'react'
-apiClient = require '../api/client'
-talkClient = require '../api/talk'
-Router = require 'react-router'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+ReactDOM = require 'react-dom'
+apiClient = require 'panoptes-client/lib/api-client'
+talkClient = require 'panoptes-client/lib/talk-client'
 CommentBox = require './comment-box'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'PrivateMessageForm'
-  mixins: [Router.Navigation]
+
+  contextTypes:
+    geordi: PropTypes.object
+    router: PropTypes.object.isRequired
+
+  logClick: ->
+    @context?.geordi?.logEvent
+      type: 'send-message'
+      data: {sender: @props.user.display_name, recipient: @props.profileUser.display_name}
 
   onSubmitMessage: (_, body) ->
-    pm = @getDOMNode().querySelector('.private-message-form')
+    @logClick()
+    pm = ReactDOM.findDOMNode(@).querySelector('.private-message-form')
     input = pm.querySelector('input')
 
     title = input.value
     user_id = @props.user.id
 
-    apiClient.type('users').get(login: @props.params.name).index(0)
+    apiClient.type('users').get(login: @props.params.profile_name).index(0)
       .then (user) =>
         recipient_ids = [+user.id] # must be array
         conversation = {title, body, user_id, recipient_ids}
@@ -23,7 +34,7 @@ module?.exports = React.createClass
       .then (conversation) =>
         talkClient.type('conversations').create(conversation).save()
           .then (conversation) =>
-            @transitionTo('inbox-conversation', {conversation: conversation.id})
+            @context.router.push "/inbox/#{conversation.id}"
 
   render: ->
     <div className="talk talk-module">

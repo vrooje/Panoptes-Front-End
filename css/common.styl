@@ -3,12 +3,53 @@ BACKGROUND = white
 MAIN_HIGHLIGHT = #43bbfd
 SECOND_HIGHLIGHT = #38b978
 COPY = #646464
-COBOLT_BLUE = #0072ff
+COBALT_BLUE = #0072ff
+BURNT_ORANGE = #f48a21
+ZOONIVERSE_TEAL = #007482
+ZOONIVERSE_NAVY = #0C4881
+HIGHLIGHT_COLOR = #F0B200
+HIGHLIGHT_COLOR_HOVER = #F6D885
+ALERT_COLOR = #E45950
+TEAL_LIGHT = #ADDDE0
+TEAL_MID = #00979D
+TEAL_DARK = #005D69
+NAVY_LIGHT = #6D91B3
+BACKGROUND_COLOR = #EEF2F5
 
 LIGHT_GREY = #CBCCCB
 SUCCESS = #009E0C
-WARNING = #FFB300
-FAILURE = #FF5A43
+
+DISCIPLINE_COLOR_ARTS = #AFA48C
+DISCIPLINE_COLOR_ALL = #00979D
+DISCIPLINE_COLOR_LANGUAGE = #9DDDF9
+DISCIPLINE_COLOR_ASTRONOMY = #512BAD
+DISCIPLINE_COLOR_NATURE = #46D178
+DISCIPLINE_COLOR_PHYSICS = #F27441
+DISCIPLINE_COLOR_CLIMATE = #A1BFBE
+DISCIPLINE_COLOR_LITERATURE = #EADF5C
+DISCIPLINE_COLOR_BIOLOGY = #18807F
+DISCIPLINE_COLOR_HUMANITARIAN = #C46FC6
+DISCIPLINE_COLOR_MEDICINE = #EF4343
+DISCIPLINE_COLOR_HISTORY = #F9DB46
+DISCIPLINE_COLOR_SOCIAL_SCIENCE = #7EA8CE
+
+MINI_COURSE_BLUE = #468ee5
+
+PROJECT_BACKGROUND = #EDF0F4
+PROJECT_BACKGROUND_DARK = #282828
+PROJECT_SUBMENU_BLUE = #153D84
+
+NOTIFICATION_BACKGROUND = #fafafa
+TALK_BACKGROUND = #f7f7f7
+TALK_BORDER = #F2F1F1
+TALK_BORDER_RADIUS = 6px
+TALK_PADDING = 5px
+TALK_MARGIN = 10px auto
+TALK_BREAKPOINT = 670px
+
+COPY_GREY_DARK = #404040
+COPY_GREY_MID = #898989
+COPY_GREY_LIGHT = #afaeae
 
 background-stripes(color1, color2, size)
   background-image: linear-gradient(
@@ -29,6 +70,20 @@ background-stripes(color1, color2, size)
   to
     background-position: 1em 0
 
+/* Globally prevent Firefox from affecting buttons' dimensions. */
+@css {
+  button::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+  }
+
+  @-moz-document url-prefix() {
+    button:focus {
+      outline: 1px dotted;
+    }
+  }
+}
+
 $reset-button
   background: transparent
   border: 0
@@ -42,9 +97,11 @@ $reset-button
   position: relative
   text-decoration: none
 
-  &:disabled
+  &:disabled,
+  &[data-disabled]
     cursor: inherit
     opacity: 0.3
+    pointer-events: none
 
   &[data-busy]::after
     animation: busy-button-animation 1s linear infinite alternate
@@ -62,3 +119,105 @@ $generic-heading
   letter-spacing: 0.1em
   opacity: 0.7
   text-transform: uppercase
+
+.approval-status
+  display: block
+
+$project-role
+  background: #555555
+  border-radius: 2px
+  color: #ffffff
+  font-size: 0.5em
+  font-weight: bold
+  letter-spacing: 0.05em
+  margin: 0 0.3em
+  padding: 0.1em 0.4em
+  text-transform: uppercase
+
+$announcement-banner
+  border: 2px solid
+  border-radius: 0.2em
+  box-shadow: 0 2px 4px rgba(black, 0.3)
+  box-sizing: border-box
+  color: white
+  margin: 0 3vw
+  padding: 0 1.5vw
+  text-align: center
+
+$owned-card-list
+  display: flex
+  flex-direction: row
+  flex-wrap: wrap
+  justify-content: center
+  max-width: 1200px
+  margin: 0 auto
+  text-align: center
+  // Added styles below to fix Chrome bug: https://code.google.com/p/chromium/issues/detail?id=297782
+  overflow: hidden
+  position: relative
+  font-size: 14px
+  margin-top: 2.33em
+
+$owned-card
+  background-position: 50% 0
+  background-size: cover
+  border: solid thin #ebebeb
+  display: inline-block
+  margin: 0 0.5em 1em
+  max-width: 220px
+  overflow: hidden
+  text-align: left
+  text-decoration: none
+  height: 270px
+  position: relative
+
+  .details
+    background: BACKGROUND
+    box-sizing: border-box
+    color: FOREGROUND
+    display: flex
+    flex-direction: column
+    bottom: 0
+    left: 0
+    right: 0
+    position: absolute
+    transition: height 0.5s ease
+
+  :hover > &,
+  :focus > &
+    .details
+      height: 175px
+
+  .description
+    color: COPY
+    font-size: 0.9em
+    height: 150px
+    overflow: hidden
+
+.color-label
+  display: inline
+  border-radius: 2px
+  font-size: 0.5em
+  font-weight: bold
+  letter-spacing: 0.05em
+  margin: 0 0.3em
+  padding: 0 0.3em
+  vertical-align: middle
+  text-transform: uppercase
+  pointer-events: none
+
+  &.green
+    border: 1px solid green
+    color: green
+  &.red
+    border: 1px solid red
+    color: red
+  &.orange
+    border: 1px solid orange
+    color: orange
+  &.blue
+    border: 1px solid blue
+    color: blue
+  &.yellow
+    border: 1px solid yellow
+    color: orange

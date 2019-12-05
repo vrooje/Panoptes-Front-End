@@ -1,8 +1,9 @@
 React = require 'react'
+createReactClass = require 'create-react-class'
 ChangeListener = require './change-listener'
 handleInputChange = require '../lib/handle-input-change'
 
-AnswerEditor = React.createClass
+AnswerEditor = createReactClass
   displayName: 'AnswerEditor'
 
   render: ->
@@ -34,7 +35,7 @@ AnswerEditor = React.createClass
       </div>
     </div>
 
-QuestionTaskEditor = React.createClass
+QuestionTaskEditor = createReactClass
   displayName: 'QuestionTaskEditor'
 
   render: ->
@@ -81,7 +82,7 @@ QuestionTaskEditor = React.createClass
     @props.task.answers.splice index, 1
     @props.workflow.update 'tasks'
 
-ToolEditor = React.createClass
+ToolEditor = createReactClass
   displayName: 'ToolEditor'
 
   render: ->
@@ -123,7 +124,7 @@ ToolEditor = React.createClass
       </div>
     </div>
 
-DrawingTaskEditor = React.createClass
+DrawingTaskEditor = createReactClass
   displayName: 'DrawingTaskEditor'
 
   render: ->
@@ -159,7 +160,7 @@ DrawingTaskEditor = React.createClass
     @props.task.tools.splice index, 1
     @props.workflow.update 'tasks'
 
-TaskEditor = React.createClass
+TaskEditor = createReactClass
   displayName: 'TaskEditor'
 
   render: ->
@@ -176,7 +177,7 @@ TaskEditor = React.createClass
       <TaskComponent {...@props} task={task} />
     </div>
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'WorkflowEditor'
 
   statics:
@@ -187,7 +188,7 @@ module.exports = React.createClass
           transition.retry()
 
   getDefaultProps: ->
-    apiClient = require '../api/client'
+    apiClient = require 'panoptes-client/lib/api-client'
     workflow: apiClient.type('workflows-for-dev-only').create
       display_name: 'Test workflow'
       tasks:
@@ -234,6 +235,7 @@ module.exports = React.createClass
         <button type="button" className="adder" onClick={@addNewTask.bind this, 'single'}>Question</button>
         <button type="button" className="adder" onClick={@addNewTask.bind this, 'drawing'}>Marking</button>
         <button type="button" className="adder" onClick={@addNewTask.bind this, 'survey'} disabled>Image survey</button>
+        <button type="button" className="adder" onClick={@addNewTask.bind this, 'flexibleSurvey'} disabled>Flexible Image Survey</button>
       </div>
     </div>
 

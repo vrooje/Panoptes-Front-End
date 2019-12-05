@@ -1,41 +1,58 @@
-body
-  margin: 0
-
-.panoptes-main
+.app-layout
+  background-position: center top
+  background-size: cover
   display: flex
-  flex: 1 0 auto
   flex-direction: column
-  min-height: 100vh // TODO: iOS's `vh` is buggy, so work around it.
+  min-height: 100vh
+  position: relative
 
-.main-content
-  display: flex
-  flex: 1 0 auto
-  flex-direction: column
+  &__admin-indicator
+    border: 0.3em solid;
+    border-image: repeating-linear-gradient(45deg, #000, #000 1%, #ff0 1%, #ff0 2%) 5;
+    box-sizing: border-box
+    height: 100%
+    left: 0
+    pointer-events: none
+    position: fixed
+    top: 0
+    width: 100%
+    z-index: 2
 
-.content-container
-  margin: 1.5em 3vw
+  &__header
+    background-color: TEAL_MID
+    color: white
+    width: 100%
 
-.columns-container
-  display: flex
+  &__not-header
+    display: flex
+    flex-direction: column
+    flex-grow: 1
 
-  &.inline
-    align-items: baseline
-    flex-wrap: wrap
+  &__main
+    background: white
+    color: #404040
+    display: flex
+    flex-direction: column
+    flex-grow: 1
+    position: relative
+    transform-origin: center top
+    transition: opacity 250ms, transform 125ms
 
-  &.spread
-    justify-content: space-between
+    &--set-aside
 
-  > :not(:last-child)
-    margin-right: 1.5vw
+      .project-page
 
-  > :not(hr)
-    flex: 1 1
+        > div
+        > nav
+          opacity: 0.9
 
-  > .column
-    flex-grow: 5
+        > .talk
+          opacity: 1
 
-  > hr
-    border-width: 0 0 0 1px
-    height: auto
-    margin-bottom: 0
-    margin-top: 0
+  &__page-header,
+  &__page-content
+    padding: 1em 5vw
+
+  &__footer
+    background: #272727
+    color: rgba(white, 0.5)

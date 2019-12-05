@@ -18,27 +18,33 @@ hover-button(color)
 
   .moderations-actions-buttons
     text-align: right
-    text-transform: capitalize
 
-    p
+    > p
       margin: 0
 
-      strong
+      > strong
         text-transform: capitalize
 
-    > button
+    .textarea-container
+      text-align: right
+      textarea
+        display: inline
+
+    button
       color: white
+      text-transform: capitalize
+
       &:not(:last-child)
         margin-right: 5px
 
       &.moderations-ignore
-        hover-button: WARNING
+        hover-button: HIGHLIGHT_COLOR
 
       &.moderations-destroy
-        hover-button: FAILURE
+        hover-button: ALERT_COLOR
 
       &.moderations-watch
-        hover-button: COBOLT_BLUE
+        hover-button: TEAL_MID
 
       &.moderations-open
         hover-button: SUCCESS

@@ -1,7 +1,11 @@
-{Model} = require 'json-api-client'
+createDOMPurify = require('dompurify');
+
+DOMPurify = createDOMPurify(window);
 
 module.exports = (e) ->
-  unless this instanceof Model
+  # Using this module is a little odd.
+  # Ensure that it's called in the context of a JSON-API Model instance.
+  unless typeof @update is 'function' and typeof @emit is 'function'
     throw new Error 'Bind the handleInputChange function to a json-api-client Model instance'
 
   valueProperty = switch e.target.type
@@ -11,9 +15,10 @@ module.exports = (e) ->
 
   value = e.target[valueProperty]
 
-  if e.target.dataset.jsonValue
+  if e.target.dataset?.jsonValue
     value = JSON.parse value
 
   changes = {}
-  changes[e.target.name] = value
+  sanitizedValue = DOMPurify.sanitize(value)
+  changes[e.target.name] = sanitizedValue
   @update changes

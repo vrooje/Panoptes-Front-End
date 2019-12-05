@@ -1,12 +1,14 @@
 React = require 'react'
-Markdown = require '../components/markdown'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+{Markdown} = require 'markdownz'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'TalkCommentPreview'
 
   propTypes:
-    content: React.PropTypes.string
-    header: React.PropTypes.string
+    content: PropTypes.string
+    header: PropTypes.string
 
   getDefaultProps: ->
     header: "Preview"

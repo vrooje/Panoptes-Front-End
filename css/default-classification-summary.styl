@@ -1,0 +1,43 @@
+.classification-summary, .classification-summary__title
+  padding: 0 2em 0 2em
+
+.classification-task-summary
+  background: rgba(gray, 0.1)
+  border: 1px solid rgba(gray, 0.5)
+  border-radius: 3px
+  font-size: 0.8em
+  margin: 0.5em 0
+  padding: 0.8em 1.5vw
+
+  .answer
+    font-weight: bold
+
+  .toggle-more
+    @extends .standard-button
+    color: white
+    padding: 0 0.5em
+    float: right
+
+.classification-task-summary-with-feedback
+  @extends .classification-task-summary
+
+  p
+    margin: 0
+    font-weight: bold
+
+  > ul
+    padding-left: 0
+    margin: 0
+    list-style-type: none
+
+.classification-intervention-message-with-optOut
+  border: 1px solid rgba(gray, 0.5)
+  border-radius: 3px
+  font-size: 0.8em
+  margin: 0.5em 0
+  padding: 0.8em 1.5vw
+
+  p
+    margin: 0 0 0.5em 0
+
+

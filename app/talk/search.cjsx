@@ -1,30 +1,18 @@
 React = require 'react'
-{ Navigation } = require 'react-router'
-talkClient = require '../api/talk'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+talkClient = require 'panoptes-client/lib/talk-client'
 Paginator = require './lib/paginator'
-TalkSearchResult = require './search-result'
 resourceCount = require './lib/resource-count'
-Loading = require '../components/loading-indicator'
+ProjectLinker = require './lib/project-linker'
+Loading = require('../components/loading-indicator').default
+
+`import ActiveUsers from './active-users';`
+`import TalkSearchResult from './search-result';`
+`import PopularTags from './popular-tags';`
 
 TALK_SEARCH_ERROR_MESSAGE = 'There was an error with your search. Please try again.'
 VALID_SEARCH_PARAMS = ['page', 'page_size', 'query', 'types', 'section']
-
-formTalkSearchParams = (object) ->
-  params = []
-
-  for key, val of object
-    if Array.isArray(val)
-      params.push "#{key}[]=#{window.encodeURIComponent val}"
-    else
-      params.push "#{key}=#{window.encodeURIComponent val}"
-
-  return params.join '&'
-
-status = (response) ->
-  if (response.status >= 200 && response.status < 300)
-    return response
-
-  throw new Error
 
 filterObjectKeys = (object, validKeys) ->
   newObject = {}
@@ -35,9 +23,17 @@ filterObjectKeys = (object, validKeys) ->
 
   return newObject
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'TalkSearch'
-  mixins: [Navigation]
+
+  contextTypes:
+    geordi: PropTypes.object
+    router: PropTypes.object.isRequired
+
+  goBack: (linkName) ->
+    @context.router.goBack()
+    @context.geordi?.logEvent
+      type: linkName
 
   getInitialState: ->
     errorThrown: false
@@ -46,10 +42,11 @@ module.exports = React.createClass
     resultsMeta: {}
 
   componentDidMount: ->
-    @runSearchQuery filterObjectKeys @props.query, VALID_SEARCH_PARAMS
+    @runSearchQuery filterObjectKeys @props.location.query, VALID_SEARCH_PARAMS
 
   componentWillReceiveProps: (nextProps) ->
-    @runSearchQuery filterObjectKeys nextProps.query, VALID_SEARCH_PARAMS
+    if @props.location.query isnt nextProps.location.query
+      @runSearchQuery filterObjectKeys nextProps.location.query, VALID_SEARCH_PARAMS
 
   runSearchQuery: (params) ->
     @setState
@@ -63,41 +60,35 @@ module.exports = React.createClass
       page: 1
       page_size: 10
 
-    paramsToUse = Object.assign defaultParams, params
+    paramsToUse = Object.assign {}, defaultParams, params
 
-    params = formTalkSearchParams paramsToUse
-    url = talkClient.root + "/searches?" + params
-
-    fetch url, { method: 'get' }, talkClient.headers
-      .then(status)
-      .then (response) -> return response.json()
-      .then ({ searches, meta }) =>
-        discussionRequests = []
-        for comment in searches
-          do (comment) ->
-            discussionRequests.push talkClient.type('discussions').get(comment.discussion_id, {sort_linked_comments: 'created_at'}).then (discussionResult) ->
-              comment.discussion = discussionResult
-
-        Promise.all(discussionRequests).then =>
-          @setState
-            results: searches
-            resultsMeta: meta.searches
-      .catch =>
-        @setState errorThrown: true
-      .then =>
-        @setState isLoading: false
+    talkClient.type('searches').get(paramsToUse).then (searches) =>
+      @setState
+        results: searches
+        resultsMeta: searches[0]?.getMeta('searches')
+    .catch (e) =>
+      @setState errorThrown: true
+    .then =>
+      @setState isLoading: false
 
   onPageChange: (page) ->
     @goToPage page
 
   goToPage: (n) ->
-    nextQuery = Object.assign @props.query, {page: n}
-    @transitionTo @props.path, @props.params, nextQuery
+    nextQuery = Object.assign {}, @props.location.query, {page: n}
+
+    @context.router.push
+      pathname: location.pathname
+      query: nextQuery
 
   render: ->
     numberOfResults = @state.results.length
 
     <div className="talk-search">
+      <button className="link-style" type="button" onClick={@goBack.bind this, 'search-back'}>
+        <i className="fa fa-backward" /> Back
+      </button>
+
       {if @state.isLoading
         <Loading />}
 
@@ -113,10 +104,30 @@ module.exports = React.createClass
             Your search returned {resourceCount @state.resultsMeta.count, 'results'}.
           </div>
 
-          <div className="talk-search-results">
-            {@state.results.map (result, i) =>
-              <TalkSearchResult {...@props} data={result} key={i} />}
-            <Paginator page={+@state.resultsMeta.page} onPageChange={@onPageChange} pageCount={@state.resultsMeta.page_count} />
+          <div className="talk-list-content">
+            <section className="talk-search-results">
+              {@state.results.map (result, i) =>
+                <TalkSearchResult {...@props} data={result} key={i} />}
+              <Paginator page={+@state.resultsMeta.page} onPageChange={@onPageChange} pageCount={@state.resultsMeta.page_count} />
+            </section>
+
+            <div className="talk-sidebar">
+              <section>
+                <PopularTags
+                  header={<h3>Popular Tags:</h3>}
+                  section={@props.section}
+                  project={@props.project} />
+              </section>
+
+              <section>
+                <ActiveUsers section={@props.section} project={@props.project} />
+              </section>
+
+              <section>
+                <h3>Projects:</h3>
+                <ProjectLinker />
+              </section>
+            </div>
           </div>
         </div>}
     </div>

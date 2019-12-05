@@ -1,6 +1,7 @@
 React = require 'react'
+createReactClass = require 'create-react-class'
 
-RADIUS = 8
+RADIUS = if screen.width < 900 then 11 else 8
 STROKE_COLOR = 'white'
 FILL_COLOR = 'black'
 STROKE_WIDTH = 1.5
@@ -12,21 +13,22 @@ CROSS_PATH = "
   L 0 #{RADIUS * 0.7 }
 "
 
-DESTROY_TRANSITION_DURATION = 300
-
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'DeleteButton'
 
   getDefaultProps: ->
     x: 0
     y: 0
     rotate: 0
+    destroyTransitionDuration: 300
 
   render: ->
+    matrix = @props.getScreenCurrentTransformationMatrix()
+    return null unless matrix?
     transform = "
       translate(#{@props.x}, #{@props.y})
       rotate(#{@props.rotate})
-      scale(#{1 / @props.tool.props.scale.horizontal}, #{1 / @props.tool.props.scale.vertical})
+      matrix( #{1/matrix.a} 0 0 #{1/matrix.d} 0 0)
     "
 
     <g className="clickable drawing-tool-delete-button" transform={transform} stroke={STROKE_COLOR} strokeWidth={STROKE_WIDTH} onClick={@destroyTool}>
@@ -36,4 +38,4 @@ module.exports = React.createClass
 
   destroyTool: ->
     @props.tool.setState destroying: true, =>
-      setTimeout @props.tool.props.onDestroy, DESTROY_TRANSITION_DURATION
+      setTimeout @props.tool.props.onDestroy, @props.destroyTransitionDuration

@@ -1,53 +1,59 @@
-React = {findDOMNode} = require 'react'
-talkClient = require '../api/talk'
+React = require 'react'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+talkClient = require 'panoptes-client/lib/talk-client'
 UserSearch = require '../components/user-search'
-{Navigation} = require 'react-router'
 {getErrors} = require './lib/validations'
 subjectValidations = require './lib/message-subject-validations'
 messageValidations = require './lib/message-validations'
 CommentBox = require './comment-box'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'InboxForm'
-  mixins: [Navigation]
 
   propTypes:
-    user: React.PropTypes.object
+    user: PropTypes.object
+
+  contextTypes:
+    geordi: PropTypes.object
+    router: PropTypes.object.isRequired
 
   getInitialState: ->
     validationErrors: []
 
-  validations: (message, subject, recipients) ->
-    userErrors = if (not recipients.length) then ['Messages must have a recipient'] else []
-    subjectErrors = getErrors(subject, subjectValidations)
+  validations: (message) ->
+    recipient_ids = @userSearch.value()?.value?.length
+
+    userErrors = if (not recipient_ids) then ['Messages must have a recipient'] else []
+    subjectErrors = getErrors(@refs.subject.value, subjectValidations)
     messageValidationErrors = getErrors(message, messageValidations)
 
     validationErrors = userErrors.concat subjectErrors.concat messageValidationErrors
     @setState {validationErrors}
     !!validationErrors.length
 
+  logEvent: (evtType) ->
+    @context.geordi?.logEvent
+      type: evtType
+
   onSubmitMessage: (_, body) ->
-    recipient_ids = @getDOMNode().querySelector('[name="userids"]').value
-      .split(',').map (id) -> parseInt(id)
-      .filter(Number)
+    @logEvent 'send-message'
+    recipient_ids = [parseInt @userSearch.value().value]
 
-    title = findDOMNode(@refs.subject).value
+    title = @refs.subject.value
     user_id = @props.user.id
-
-    errored = @validations(body, title, recipient_ids)
-    return errored if errored
 
     conversation = {title, body, user_id, recipient_ids}
 
     talkClient.type('conversations').create(conversation).save()
       .then (conversation) =>
-        @transitionTo('inbox-conversation', {conversation: conversation.id})
+        @context.router.push "/inbox/#{conversation.id}"
 
   render: ->
     <div className="inbox-form talk-module">
       <div className="talk-form talk-moderation-children">
         <h2>To:</h2>
-        <UserSearch multi={false} />
+        <UserSearch ref={(component) => @userSearch = component} multi={false} onSearch={@logEvent.bind(this, 'username-search')} />
 
         <h2>Message:</h2>
         <input placeholder="Subject" type="text" ref="subject"/>
@@ -55,7 +61,7 @@ module?.exports = React.createClass
           user={@props.user}
           header={null}
           content=""
-          validationCheck={ -> false }
+          validationCheck={@validations}
           validationErrors={@state.validationErrors}
           submitFeedback={"Sent!"}
           onSubmitComment={@onSubmitMessage}

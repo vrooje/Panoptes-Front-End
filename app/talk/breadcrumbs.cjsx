@@ -1,46 +1,97 @@
 React = require 'react'
-{Link, Navigation} = require 'react-router'
-PromiseRenderer = require '../components/promise-renderer'
-merge = require 'lodash.merge'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+talkClient = require 'panoptes-client/lib/talk-client'
+{Link} = require 'react-router'
 
-module?.exports = React.createClass
+module.exports = createReactClass
   displayName: 'TalkBreadcrumbs'
-  mixins: [Navigation]
+  
+  getInitialState: ->
+    board: null
+    discussion: null
+  
+  componentWillMount: ->
+    @updateBoard @props.params.board
+    @updateDiscussion @props.params.discussion
+  
+  componentWillReceiveProps: (newProps) ->
+    @updateBoard newProps.params.board if newProps.params.board isnt @props.params.board
+    @updateDiscussion newProps.params.discussion if newProps.params.discussion isnt @props.params.discussion
 
-  projectPrefix: ->
-    if @props.project then 'project-' else ''
+  contextTypes:
+    router: PropTypes.object.isRequired
 
   crumbCatch: (e) ->
     if e.message.indexOf('not allowed to show') isnt -1
-      @replaceWith("talk-not-found")
+      @context.router.replace '/talk/not-found'
 
+  boardLink: (board) ->
+    <Link to="#{@rootTalkPath()}/#{board.id}">
+      {board.title}
+    </Link>
+
+  rootTalkPath: ->
+    if @props.project
+      [owner, name] = @props.project.slug.split('/')
+      "/projects/#{owner}/#{name}/talk"
+    else
+      "/talk"
+  
+  updateBoard: (boardId) ->
+    if boardId?
+      talkClient
+        .type 'boards'
+        .get boardId
+        .then (board) =>
+          @setState {board}
+        .catch @crumbCatch
+    else
+      @setState board: null
+
+  updateDiscussion: (discussionId) ->
+    if discussionId?
+      talkClient
+        .type 'discussions'
+        .get discussionId
+        .then (discussion) =>
+          @setState {discussion}
+        .catch @crumbCatch
+    else
+      @setState discussion: null
+      
   render: ->
-    params = @props.params
+    onBoard = @state.board?
+    onDiscussion = onBoard and @state.discussion?
+    onRecents = @props.route.path.match /\/talk\/recents/
 
     <div className="talk-breadcrumbs">
       <div className="talk-breadcrumbs">
-        {if params.board?
+        {if onBoard or onRecents
           <span>
-            <Link to="#{@projectPrefix()}talk" params={params}>
+            <Link to={@rootTalkPath()}>
               {if @props.project then @props.project.display_name else 'Zooniverse'} Talk
             </Link>
-            &nbsp;>&nbsp;
+            {if onBoard
+              <span>&nbsp;>&nbsp;</span>}
           </span>}
 
-        {if params.board? and not params.discussion?
-          <PromiseRenderer promise={talkClient.type('boards').get(params.board)} catch={@crumbCatch}>{(board) =>
-            <span>{board.title}</span>}
-          </PromiseRenderer>}
-
-        {if params.board? and params.discussion?
-          <PromiseRenderer promise={talkClient.type('boards').get(params.board)} catch={@crumbCatch}>{(board) =>
-            <span>
-              <Link to="#{@projectPrefix()}talk-board" params={merge({}, {board: board.id}, params)}>{board.title}</Link>
-              &nbsp;>&nbsp;
-              <PromiseRenderer promise={talkClient.type('discussions').get(params.discussion)} catch={@crumbCatch}>{(discussion) =>
-                <span>{discussion.title}</span>}
-              </PromiseRenderer>
-            </span>}
-          </PromiseRenderer>}
+        {if onBoard
+          <span>
+            {if onDiscussion
+              <span>
+                {@boardLink @state.board}
+                <span>&nbsp;>&nbsp;{@state.discussion?.title}</span>
+              </span>
+            else if not onDiscussion and not onRecents
+              <span>{@state.board?.title}</span>}
+            {if onRecents
+              <span>
+                {@boardLink @state.board}
+                <span>&nbsp;>&nbsp;Recents</span>
+              </span>}
+          </span>
+        else if onRecents
+          <span>&nbsp;>&nbsp;Recents</span>}
       </div>
     </div>

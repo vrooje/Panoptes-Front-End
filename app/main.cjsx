@@ -1,148 +1,63 @@
 React = require 'react'
-React.initializeTouchEvents true
-window.React = React
-Router = {RouteHandler, DefaultRoute, Route, NotFoundRoute} = require 'react-router'
-auth = require './api/auth'
-MainHeader = require './partials/main-header'
-MainFooter = require './partials/main-footer'
-IOStatus = require './partials/io-status'
+ReactDOM = require 'react-dom'
+apiClient = require 'panoptes-client/lib/api-client'
+{ applyRouterMiddleware, Router, browserHistory } = require 'react-router'
+useScroll = require 'react-router-scroll/lib/useScroll'
+routes = require './router'
+style = require '../css/main.styl'
+{ sugarClient } = require 'panoptes-client/lib/sugar'
 
-logDeployedCommit = require './lib/log-deployed-commit'
-logDeployedCommit()
+# register locales
+`import counterpart from 'counterpart';`
+`import locales from './locales';`
 
-App = React.createClass
-  displayName: 'PanoptesApp'
+Object.keys(locales).forEach((key) -> counterpart.registerTranslations(key, locales[key]))
 
-  getInitialState: ->
-    user: null
-    initialLoadComplete: false
+counterpart.setFallbackLocale('en')
 
-  componentDidMount: ->
-    auth.listen 'change', @handleAuthChange
-    @handleAuthChange()
+# Redux
+`import { Provider } from 'react-redux';`
+`import configureStore from './redux/store';`
+`import { processIntervention } from './redux/ducks/interventions';`
+store = configureStore()
+apiClient.type('subject_sets').listen('add-or-remove', () => store.dispatch(emptySubjectQueue()));
+sugarClient.on('experiment', (message) => store.dispatch(processIntervention(message)));
 
-  componentWillUnmount: ->
-    auth.stopListening 'change', @handleAuthChange
+# Redirect any old `/#/foo`-style URLs to `/foo`
+# ensuring we preserve the location path, search and hash fragments
+# e.g. http://www.penguinwatch.org/#/classify
+# https://www.zooniverse.org/projects/penguintom79/penguin-watch/classify
+if location?.hash.charAt(1) is '/'
+  hashPathSuffix = location.hash.slice(1)
+  locationPath = location.pathname
+  if locationPath.slice(-1) is '/'
+     locationPath = locationPath.replace(/\/+$/, "");
+  urlNoHashPaths = location.origin + locationPath + hashPathSuffix + location.search
+  location.replace(urlNoHashPaths)
 
-  handleAuthChange: ->
-    auth.checkCurrent().then (user) =>
-      @setState
-        user: user
-        initialLoadComplete: true
+browserHistory.listen ->
+  dispatchEvent new CustomEvent 'locationchange'
 
-  render: ->
-    <div className="panoptes-main">
-      <IOStatus />
-      <MainHeader user={@state.user} />
-      <div className="main-content">
-        {if @state.initialLoadComplete
-          <RouteHandler {...@props} user={@state.user} />}
-      </div>
-      <MainFooter user={@state.user} />
-    </div>
+# make sure project stats page does not scroll back to the top when the URL changes
+shouldUpdateScroll = (prevRouterProps, routerProps) ->
+  pathname = routerProps.location.pathname.split('/')
+  isStats = ('stats' in pathname) and ('projects' in pathname)
+  isSubjectTalk = ('talk' in pathname) and ('subjects' in pathname)
+  isLabVisibility = ('lab' in pathname) and ('visibility' in pathname)
+  isOrganization = ('organizations' in pathname)
+  hashChange = routerProps.location.hash.length
+  if isStats or hashChange or isSubjectTalk or isLabVisibility or isOrganization
+    false
+  else
+    true
 
-routes = <Route handler={App}>
-  <DefaultRoute name="home" handler={require './pages/home'} />
+ReactDOM.render <Provider store={store}><Router history={browserHistory} render={applyRouterMiddleware(useScroll(shouldUpdateScroll))}>{routes}</Router></Provider>,
+  document.getElementById('panoptes-main-container')
 
-  <Route name="about" path="about" handler={require './pages/about'} ignoreScrollBehavior>
-    <DefaultRoute name="about-home" handler={require './pages/about/about-home'} />
-    <Route name="about-team" path="team" handler={require './pages/about/team-page'} />
-    <Route name="about-publications" path="publications" handler={require './pages/about/publications-page'} />
-    <Route name="about-education" path="education" handler={require './pages/about/education-page'} />
-    <Route name="about-contact" path="contact" handler={require './pages/about/contact-page'} />
-  </Route>
+# Are we connected to the latest back end?
+require('./lib/log-deployed-commit')()
 
-  <Route name="reset-password" handler={require './pages/reset-password'} />
-
-  <Route name="unsubscribe" handler={require './pages/unsubscribe'} />
-
-  <Route path="account" handler={require './pages/sign-in'}>
-    <Route name="sign-in" handler={require './partials/sign-in-form'} />
-    <Route name="register" handler={require './partials/register-form'} />
-  </Route>
-  <Route name="privacy" handler={require './pages/privacy-policy'} />
-
-  <Route path="users/:name" handler={require './pages/profile'}>
-    <DefaultRoute name="user-profile" handler={require './pages/profile/feed'} />
-    <Route name="user-profile-private-message" path="message" handler={require './pages/profile/private-message'} />
-    <Route name="user-profile-stats" path="stats" handler={require './pages/profile/stats'} />
- </Route>
-
-  <Route name="inbox" handler={require './talk/inbox'} />
-  <Route name="inbox-conversation" path="inbox/:conversation" handler={require './talk/inbox-conversation'} />
-
-  <Route path="settings" handler={require './pages/settings'}>
-    <DefaultRoute name="settings" handler={require './pages/settings/account'} />
-    <Route name="profile-settings" path="profile" handler={require './pages/settings/profile' } />
-    <Route name="email-settings" path="email" handler={require './pages/settings/email' } />
-  </Route>
-
-  <Route name="projects" handler={require './pages/projects'} />
-  <Route path="projects/:owner/:name" handler={require './pages/project'}>
-    <DefaultRoute name="project-home" handler={require './pages/project/home'} />
-    <Route name="project-research" path="research" handler={require './pages/project/research'} />
-    <Route name="project-results" path="results" handler={require './pages/project/results'} />
-    <Route name="project-classify" path="classify" handler={require './pages/project/classify'} />
-    <Route name="project-talk" path="talk" handler={require './pages/project/talk'}>
-      <DefaultRoute name="project-talk-home" handler={require './talk/init'} />
-      <Route name="project-talk-not-found" path="not-found" handler={require './pages/not-found'} />
-      <Route name="project-talk-search" path="search" handler={require './talk/search'}/>
-      <Route name="project-talk-moderations" path="moderations" handler={require './talk/moderations'}/>
-      <Route name="project-talk-subject" path="subjects/:id" handler={require './subjects'}/>
-      <Route name="project-talk-board" path=":board" handler={require './talk/board'} />
-      <Route name="project-talk-discussion" path=":board/:discussion" handler={require './talk/discussion'} />
-    </Route>
-    <Route name="project-faq" path="faq" handler={require './pages/project/faq'} />
-    <Route name="project-education" path="education" handler={require './pages/project/education'} />
-  </Route>
-
-  <Route name="talk" path="talk" handler={require './talk'}>
-    <DefaultRoute name="talk-home" handler={require './talk/init'} />
-    <Route name="talk-moderations" path="moderations" handler={require './talk/moderations'} />
-    <Route name="talk-not-found" path="not-found" handler={require './pages/not-found'} />
-    <Route name="talk-search" path="search" handler={require './talk/search'} />
-    <Route name="talk-board" path=":board" handler={require './talk/board'} />
-    <Route name="talk-discussion" path=":board/:discussion" handler={require './talk/discussion'} />
-  </Route>
-
-  <Route name="collections" path="collections" handler={require './pages/collections'}>
-    <Route name="collections-user" path=":owner" handler={require './pages/collections'} />
-  </Route>
-  <Route name="collection-show" path="collections/:owner/:name" handler={require './collections/show'}>
-    <DefaultRoute name="collection-show-list" handler={require './collections/show-list'} />
-    <Route name="collection-settings" path="settings" handler={require './collections/settings'} />
-    <Route name="collection-collaborators" path="collaborators" handler={require './collections/collaborators'} />
-    <Route name="collection-talk" path="talk" handler={require './collections/show-list'} />
-  </Route>
-
-  <Route name="lab" handler={require './pages/lab'} />
-  <Route path="lab/:projectID" handler={require './pages/lab/project'}>
-    <DefaultRoute name="edit-project-details" handler={require './pages/lab/project-details'} />
-    <Route name="edit-project-research" path="research" handler={require './pages/lab/research'} />
-    <Route name="edit-project-results" path="results" handler={require './pages/lab/results'} />
-    <Route name="edit-project-faq" path="faq" handler={require './pages/lab/faq'} />
-    <Route name="edit-project-education" path="education" handler={require './pages/lab/education'} />
-    <Route name="edit-project-collaborators" path="collaborators" handler={require './pages/lab/collaborators'} />
-    <Route name="edit-project-media" path="media" handler={require './pages/lab/media'} />
-    <Route name="edit-project-workflow" path="workflow/:workflowID" handler={require './pages/lab/workflow'} />
-    <Route name="edit-project-subject-set" path="subject-set/:subjectSetID" handler={require './pages/lab/subject-set'} />
-    <Route name="edit-project-visibility" path="visibility" handler={require './pages/lab/visibility'} />
-  </Route>
-  <Route name="lab-policies" path="lab-policies" handler={require './pages/lab/lab-policies'} />
-  <Route name="lab-how-to" path="lab-how-to" handler={require './pages/lab/how-to-page'} />
-
-  <Route path="todo/?*" handler={React.createClass render: -> <div className="content-container"><i className="fa fa-cogs"></i> TODO</div>} />
-  <NotFoundRoute handler={require './pages/not-found'} />
-
-  <Route path="dev/workflow-tasks-editor" handler={require './components/workflow-tasks-editor'} />
-  <Route path="dev/classifier" handler={require './classifier'} />
-  <Route path="dev/aggregate" handler={require './components/aggregate-view'} />
-  <Route path="dev/ribbon" handler={require './components/classifications-ribbon'} />
-</Route>
-
-mainContainer = document.createElement 'div'
-mainContainer.id = 'panoptes-main-container'
-document.body.appendChild mainContainer
-
-Router.run routes, (Handler, handlerProps) ->
-  React.render(<Handler {...handlerProps} />, mainContainer);
+# Just for console access:
+window?.zooAPI = require 'panoptes-client/lib/api-client'
+window?.talkAPI = require 'panoptes-client/lib/talk-client'
+require('./lib/split-config')

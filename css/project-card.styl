@@ -1,0 +1,29 @@
+.project-card-list
+  @extends $owned-card-list
+
+.project-card
+  @extends $owned-card
+  background-color: white
+  text-align: center
+
+  svg
+    height: 215px
+
+  .details
+    height: 60px
+    padding: 20px
+
+    .name
+      text-transform: uppercase
+      letter-spacing: 1px
+      font-weight: 700
+      font-size: 11px
+      color: COPY
+
+      span
+        display: inline-block
+        line-height: normal
+        vertical-align: middle
+
+    .description
+      margin: 0.8em 0

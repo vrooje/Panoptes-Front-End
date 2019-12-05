@@ -1,13 +1,16 @@
 React = require 'react'
-DrawingToolRoot = require './root'
+createReactClass = require 'create-react-class'
+DrawingToolRoot = require('./root').default
 DragHandle = require './drag-handle'
-Draggable = require '../../lib/draggable'
+Draggable = require('../../lib/draggable').default
+deleteIfOutOfBounds = require './delete-if-out-of-bounds'
 DeleteButton = require './delete-button'
 
 MINIMUM_SIZE = 5
-DELETE_BUTTON_DISTANCE = 9 / 10
+DELETE_BUTTON_WIDTH = 8
+BUFFER = 16
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'RectangleTool'
 
   statics:
@@ -21,7 +24,7 @@ module.exports = React.createClass
 
     initStart: ({x, y}, mark) ->
       @initCoords = {x, y}
-      {x, y}
+      {x, y, _inProgress: true}
 
     initMove: (cursor, mark) ->
       if cursor.x > @initCoords.x
@@ -40,6 +43,9 @@ module.exports = React.createClass
 
       {x, y, width, height}
 
+    initRelease: ->
+      _inProgress: false
+
     initValid: (mark) ->
       mark.width > MINIMUM_SIZE and mark.height > MINIMUM_SIZE
 
@@ -47,6 +53,8 @@ module.exports = React.createClass
 
   render: ->
     {x, y, width, height} = @props.mark
+
+    deletePosition = @getDeletePosition(x, width)
 
     points = [
       [x, y].join ','
@@ -57,49 +65,61 @@ module.exports = React.createClass
     ].join '\n'
 
     <DrawingToolRoot tool={this}>
-      <Draggable onDrag={@handleMainDrag} disabled={@props.disabled}>
+      <Draggable onDrag={@handleMainDrag} onEnd={deleteIfOutOfBounds.bind null, this} disabled={@props.disabled}>
         <polyline points={points} />
       </Draggable>
 
       {if @props.selected
         <g>
-          <DeleteButton tool={this} x={x + (width * DELETE_BUTTON_DISTANCE)} y={y} />
+          <DeleteButton tool={this} x={deletePosition.x} y={y} getScreenCurrentTransformationMatrix={@props.getScreenCurrentTransformationMatrix} />
 
-          <DragHandle x={x} y={y} scale={@props.scale} onDrag={@handleTopLeftDrag} onEnd={@normalizeMark} />
-          <DragHandle x={x + width} y={y} scale={@props.scale} onDrag={@handleTopRightDrag} onEnd={@normalizeMark} />
-          <DragHandle x={x +  width} y={y + height} scale={@props.scale} onDrag={@handleBottomRightDrag} onEnd={@normalizeMark} />
-          <DragHandle x={x} y={y + height} scale={@props.scale} onDrag={@handleBottomLeftDrag} onEnd={@normalizeMark} />
+          <DragHandle x={x} y={y} scale={@props.scale} onDrag={@handleTopLeftDrag} onEnd={@normalizeMark} getScreenCurrentTransformationMatrix={@props.getScreenCurrentTransformationMatrix} />
+          <DragHandle x={x + width} y={y} scale={@props.scale} onDrag={@handleTopRightDrag} onEnd={@normalizeMark} getScreenCurrentTransformationMatrix={@props.getScreenCurrentTransformationMatrix} />
+          <DragHandle x={x +  width} y={y + height} scale={@props.scale} onDrag={@handleBottomRightDrag} onEnd={@normalizeMark} getScreenCurrentTransformationMatrix={@props.getScreenCurrentTransformationMatrix} />
+          <DragHandle x={x} y={y + height} scale={@props.scale} onDrag={@handleBottomLeftDrag} onEnd={@normalizeMark} getScreenCurrentTransformationMatrix={@props.getScreenCurrentTransformationMatrix} />
         </g>}
     </DrawingToolRoot>
 
+  getDeletePosition: (x, width) ->
+    scale = @props.scale.horizontal
+    x += width + (BUFFER / scale)
+    if (@props.containerRect.width / scale) < x + (DELETE_BUTTON_WIDTH / scale)
+      x -= (BUFFER / scale) * 2
+    x: x
+
   handleMainDrag: (e, d) ->
-    @props.mark.x += d.x / @props.scale.horizontal
-    @props.mark.y += d.y / @props.scale.vertical
-    @props.onChange e
+    difference = @props.normalizeDifference(e, d)
+    @props.mark.x += difference.x
+    @props.mark.y += difference.y
+    @props.onChange @props.mark
 
   handleTopLeftDrag: (e, d) ->
-    @props.mark.x += d.x / @props.scale.horizontal
-    @props.mark.y += d.y / @props.scale.vertical
-    @props.mark.width -= d.x / @props.scale.horizontal
-    @props.mark.height -= d.y / @props.scale.vertical
-    @props.onChange e
+    difference = @props.normalizeDifference(e, d)
+    @props.mark.x += difference.x
+    @props.mark.y += difference.y
+    @props.mark.width -= difference.x
+    @props.mark.height -= difference.y
+    @props.onChange @props.mark
 
   handleTopRightDrag: (e, d) ->
-    @props.mark.y += d.y / @props.scale.vertical
-    @props.mark.width += d.x / @props.scale.horizontal
-    @props.mark.height -= d.y / @props.scale.vertical
-    @props.onChange e
+    difference = @props.normalizeDifference(e, d)
+    @props.mark.y += difference.y
+    @props.mark.width += difference.x
+    @props.mark.height -= difference.y
+    @props.onChange @props.mark
 
   handleBottomRightDrag: (e, d) ->
-    @props.mark.width += d.x / @props.scale.horizontal
-    @props.mark.height += d.y / @props.scale.vertical
-    @props.onChange e
+    difference = @props.normalizeDifference(e, d)
+    @props.mark.width += difference.x
+    @props.mark.height += difference.y
+    @props.onChange @props.mark
 
   handleBottomLeftDrag: (e, d) ->
-    @props.mark.x += d.x / @props.scale.horizontal
-    @props.mark.width -= d.x / @props.scale.horizontal
-    @props.mark.height += d.y / @props.scale.vertical
-    @props.onChange e
+    difference = @props.normalizeDifference(e, d)
+    @props.mark.x += difference.x
+    @props.mark.width -= difference.x
+    @props.mark.height += difference.y
+    @props.onChange @props.mark
 
   normalizeMark: ->
     if @props.mark.width < 0
@@ -110,4 +130,4 @@ module.exports = React.createClass
       @props.mark.y += @props.mark.height
       @props.mark.height *= -1
 
-    @props.onChange()
+    @props.onChange @props.mark

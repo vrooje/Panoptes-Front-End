@@ -1,18 +1,20 @@
 React = require 'react'
+createReactClass = require 'create-react-class'
 counterpart = require 'counterpart'
 Translate = require 'react-translate-component'
+{ Helmet } = require 'react-helmet'
 ChangeListener = require '../../components/change-listener'
-{Link, RouteHandler} = require 'react-router'
+{Link, IndexLink} = require 'react-router'
 
 counterpart.registerTranslations 'en',
   userSettingsPage:
-    header: "Settings"
+    title: "Settings"
     nav:
       accountInformation: "Account Information"
       customizeProfile: "Customize Profile"
       email: "Email"
 
-UserSettingsPage = React.createClass
+UserSettingsPage = createReactClass
   displayName: 'UserSettingsPage'
 
   getInitialState: ->
@@ -20,43 +22,47 @@ UserSettingsPage = React.createClass
 
   render: ->
     <section className="user-profile-content">
+      <Helmet title="#{counterpart 'userSettingsPage.title'} » #{@props.user.display_name}" />
       <div className="secondary-page settings-page">
-        <h2><Translate content="userSettingsPage.header" /></h2>
+        <h2><Translate content="userSettingsPage.title" /></h2>
         <div className="settings-content">
           <aside className="secondary-page-side-bar settings-side-bar">
             <nav>
-              <Link to="settings"
+              <IndexLink to="/settings"
                 type="button"
+                activeClassName="active"
                 className="secret-button settings-button" >
                 <Translate content="userSettingsPage.nav.accountInformation" />
-              </Link>
-              <Link to="profile-settings"
+              </IndexLink>
+              <Link to="/settings/profile"
                 type="button"
+                activeClassName="active"
                 className="secret-button settings-button" >
                 <Translate content="userSettingsPage.nav.customizeProfile" />
               </Link>
-              <Link to="email-settings"
+              <Link to="/settings/email"
                 type="button"
+                activeClassName="active"
                 className="secret-button settings-button" >
                 <Translate content="userSettingsPage.nav.email" />
               </Link>
             </nav>
           </aside>
           <section className="settings-tab-content">
-            <RouteHandler user={@props.user} />
+            {React.cloneElement @props.children, @props}
           </section>
         </div>
       </div>
     </section>
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'UserSettingsPageWrapper'
 
   render: ->
     <div>
       {if @props.user?
         <ChangeListener target={@props.user}>{ =>
-          <UserSettingsPage user={@props.user} />
+          <UserSettingsPage {...@props} user={@props.user} />
         }</ChangeListener>
       else
         <div className="content-container">

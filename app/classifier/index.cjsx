@@ -1,226 +1,209 @@
 React = require 'react'
-HandlePropChanges = require '../lib/handle-prop-changes'
-ChangeListener = require '../components/change-listener'
-SubjectViewer = require './subject-viewer'
-ClassificationSummary = require './classification-summary'
-tasks = require './tasks'
-{Link} = require 'react-router'
-drawingTools = require './drawing-tools'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+apiClient = require 'panoptes-client/lib/api-client'
+Classifier = require('./classifier').default
+MiniCourse = require './mini-course'
+Tutorial = require('./tutorial').default
+CustomSignInPrompt = require('./custom-sign-in-prompt').default;
+isAdmin = require '../lib/is-admin'
+{ VisibilitySplit } = require 'seven-ten'
+{ connect } = require 'react-redux';
+{ bindActionCreators } = require 'redux';
+translationActions  = require '../redux/ducks/translations';
 
-NOOP = Function.prototype
+###############################################################################
+# Page Wrapper Component
+###############################################################################
+auth = require 'panoptes-client/lib/auth'
 
-unless process.env.NODE_ENV is 'production'
-  mockData = require './mock-data'
+# Classification count tracked for mini-course prompt
+classificationsThisSession = 0
 
-Classifier = React.createClass
-  displayName: 'Classifier'
+auth.listen ->
+  classificationsThisSession = 0
 
-  mixins: [HandlePropChanges]
+PROMPT_MINI_COURSE_EVERY = 5
 
-  _lastAnnotationAndTool: ''
+RELOAD_UPP_EVERY = 5
 
-  getDefaultProps: ->
-    unless process.env.NODE_ENV is 'production'
-      {workflow, subject, classification} = mockData
-    workflow: workflow
-    subject: subject
-    classification: classification
-    onLoad: NOOP
-
-  propChangeHandlers:
-    subject: ->
-      @setState subjectLoading: true
-    classification: (classification) ->
-      window.classification = classification
-      setTimeout =>
-        classification.annotations ?= []
-        if classification.annotations.length is 0
-          @addAnnotationForTask @props.workflow.first_task
-
-  getInitialState: ->
-    subjectLoading: false
-    showingExpertClassification: false
-    selectedExpertAnnotation: -1
-
-  render: ->
-    <ChangeListener target={@props.classification}>{=>
-      currentClassification = if @state.showingExpertClassification
-        @props.subject.expert_classification_data
-      else
-        @props.classification
-
-      if currentClassification is @props.classification and not @props.classification.completed
-        currentAnnotation = currentClassification.annotations[currentClassification.annotations.length - 1]
-        currentTask = @props.workflow.tasks[currentAnnotation?.task]
-
-      <div className="classifier">
-        <SubjectViewer user={@props.user} project={@props.project} subject={@props.subject} workflow={@props.workflow} classification={currentClassification} annotation={currentAnnotation} onLoad={@handleSubjectImageLoad} />
-
-        <div className="task-area">
-          {if currentTask?
-            TaskComponent = tasks[currentTask.type]
-
-            onFirstAnnotation = currentClassification.annotations.indexOf(currentAnnotation) is 0
-
-            switch currentTask.type
-              when 'single'
-                currentAnswer = currentTask.answers?[currentAnnotation.value]
-                waitingForAnswer = currentTask.required and not currentAnswer
-              when 'multiple'
-                waitingForAnswer = currentTask.required and currentAnnotation.value.length is 0
-
-            # If the next task key exists, make sure the task it points to actually exists.
-            nextTaskKey = if currentTask.type is 'single' and currentAnswer? and @props.workflow.tasks[currentAnswer.next]?
-              currentAnswer.next
-            else if @props.workflow.tasks[currentTask.next]?
-              currentTask.next
-
-            disabledStyle =
-              opacity: 0.5
-              pointerEvents: 'none'
-
-            <div className="task-container" style={disabledStyle if @state.subjectLoading}>
-              <TaskComponent task={currentTask} annotation={currentAnnotation} onChange={@updateAnnotations.bind this, currentClassification} />
-
-              <hr />
-
-              <nav className="task-nav">
-                <button type="button" className="back minor-button" disabled={onFirstAnnotation} onClick={@destroyCurrentAnnotation}>Back</button>
-                {if nextTaskKey
-                  <button type="button" className="continue major-button" disabled={waitingForAnswer} onClick={@addAnnotationForTask.bind this, nextTaskKey}>Next</button>
-                else
-                  <button type="button" className="continue major-button" disabled={waitingForAnswer} onClick={@completeClassification}>Done</button>}
-              </nav>
-            </div>
-
-          else # Classification is complete.
-            @renderSummary currentClassification}
-        </div>
-      </div>
-    }</ChangeListener>
-
-  renderSummary: (currentClassification) ->
-    <div>
-      Thanks!
-
-      {if @props.subject.expert_classification_data?
-        <div className="has-expert-classification">
-          Expert classification available.
-          {if @state.showingExpertClassification
-            <button type="button" onClick={@toggleExpertClassification.bind this, false}>Hide</button>
-          else
-            <button type="button" onClick={@toggleExpertClassification.bind this, true}>Show</button>}
-        </div>}
-
-      {if @state.showingExpertClassification
-        'Expert classification:'
-      else
-        'Your classification:'}
-      <ClassificationSummary workflow={@props.workflow} classification={currentClassification} />
-
-      <hr />
-
-      <nav className="task-nav">
-        {if @props.owner? and @props.project?
-          [ownerName, name] = @props.project.slug.split('/')
-          <Link onClick={@props.onClickNext} to="project-talk-subject" params={owner: ownerName, name: name, id: @props.subject.id} className="talk standard-button">Talk</Link>}
-        <button type="button" className="continue major-button" onClick={@props.onClickNext}>Next</button>
-      </nav>
-    </div>
-
-  handleSubjectImageLoad: (e, frameIndex) ->
-    @setState subjectLoading: false
-
-    {naturalWidth, naturalHeight, clientWidth, clientHeight} = e.target
-
-    changes = {}
-    changes["metadata.subject_dimensions.#{frameIndex}"] = {naturalWidth, naturalHeight, clientWidth, clientHeight}
-
-    @props.classification.update changes
-
-    @props.onLoad? arguments...
-
-  updateAnnotations: (classification) ->
-    classification.update 'annotations'
-    @checkToolChange classification
-
-  checkToolChange: (classification) ->
-    lastAnnotationIndex = classification.annotations.length - 1
-    lastAnnotation = classification.annotations[lastAnnotationIndex]
-    if @props.workflow.tasks[lastAnnotation.task].type is 'drawing'
-      toolIdentifier = "#{lastAnnotationIndex}-#{lastAnnotation._toolIndex}"
-
-      if Array.isArray(lastAnnotation.value) and toolIdentifier isnt @_lastAnnotationAndTool
-        @handleToolChange lastAnnotation, @_lastAnnotationAndTool.split('-').pop() ? '-1'
-        @_lastAnnotationAndTool = toolIdentifier
-
-  handleToolChange: (annotation, oldToolIndex) ->
-    lastMark = annotation.value[annotation.value.length - 1]
-    if lastMark?
-      ToolComponent = drawingTools[@props.workflow.tasks[annotation.task].tools[oldToolIndex].type]
-      if ToolComponent?
-        if ToolComponent.isComplete? and not ToolComponent.isComplete lastMark
-          ToolComponent.forceComplete? lastMark
-
-  destroyCurrentAnnotation: ->
-    @props.classification.annotations.pop()
-    @props.classification.update 'annotations'
-
-  addAnnotationForTask: (taskKey) ->
-    taskDescription = @props.workflow.tasks[taskKey]
-    annotation = tasks[taskDescription.type].getDefaultAnnotation()
-    annotation.task = taskKey
-    @props.classification.annotations.push annotation
-    @props.classification.update 'annotations'
-
-  completeClassification: ->
-    @props.classification.update
-      completed: true
-      'metadata.finished_at': (new Date).toISOString()
-      'metadata.viewport':
-        width: innerWidth
-        height: innerHeight
-
-    @props.onComplete?()
-
-  toggleExpertClassification: (value) ->
-    @setState showingExpertClassification: value
-
-module.exports = React.createClass
+ClassifierWrapper = createReactClass
   displayName: 'ClassifierWrapper'
 
+  contextTypes:
+    geordi: PropTypes.object
+    store: PropTypes.object
+
+  propTypes:
+    classification: PropTypes.object
+    onLoad: PropTypes.func
+    onComplete: PropTypes.func
+    onClickNext: PropTypes.func
+    translations: PropTypes.shape({
+        locale: PropTypes.string
+      })
+    workflow: PropTypes.object
+    user: PropTypes.object
+
   getDefaultProps: ->
-    classification: mockData?.classification ? {}
-    onLoad: NOOP
-    onComplete: NOOP
-    onClickNext: NOOP
+    classification: {}
+    onLoad: Function.prototype
+    onComplete: Function.prototype
+    onClickNext: Function.prototype
+    subject: null,
+    translations: {
+      locale: 'en'
+    }
+    workflow: null
+    user: null
 
   getInitialState: ->
-    workflow: null
-    subject: null
+    expertClassifier: null
+    userRoles: []
+    tutorial: null
+    minicourse: null
+    classificationCount: null
 
   componentDidMount: ->
-    @loadClassification @props.classification
+    @checkExpertClassifier()
+    @loadClassificationsCount @props.subject
 
-  componentWillReceiveProps: (nextProps) ->
-    unless nextProps.classification is @props.classification
-      @loadClassification nextProps.classification
+    Tutorial.find @props.workflow
+    .then (tutorial) =>
+      {user, preferences} = @props
+      @setState {tutorial}
+      this.props.actions.translations.load('tutorial', tutorial.id, this.props.translations.locale) if tutorial?
+    MiniCourse.find @props.workflow
+    .then (minicourse) =>
+      @setState {minicourse}
+      this.props.actions.translations.load('tutorial', minicourse.id, this.props.translations.locale) if minicourse?
 
-  loadClassification: (classification) ->
-    @setState @getInitialState()
+  componentDidUpdate: (prevProps, prevState) ->
+    { tutorial, minicourse } = @state
+    if prevProps.translations.locale isnt this.props.translations.locale
+      this.props.actions.translations.load('tutorial', tutorial.id, this.props.translations.locale) if tutorial?
+      this.props.actions.translations.load('tutorial', minicourse.id, this.props.translations.locale) if minicourse?
 
-    # TODO: These underscored references are temporary stopgaps.
+    if prevProps.workflow isnt @props.workflow
+      Tutorial.find @props.workflow
+      .then (tutorial) =>
+        {user, preferences} = @props
+        @setState {tutorial}
+        this.props.actions.translations.load('tutorial', tutorial.id, this.props.translations.locale) if tutorial?
+      MiniCourse.find @props.workflow
+      .then (minicourse) =>
+        @setState {minicourse}
+        this.props.actions.translations.load('minicourse', minicourse.id, this.props.translations.locale) if minicourse?
+    
+    if tutorial isnt prevState.tutorial
+      Tutorial.startIfNecessary tutorial, @props.user, @props.preferences, @context.geordi, @context.store
 
-    Promise.resolve(classification._workflow ? classification.get 'workflow').then (workflow) =>
-      @setState {workflow}
+    if @props.user isnt prevProps.user
+      @setState expertClassifier: null
+      @checkExpertClassifier @props
 
-    Promise.resolve(classification._subjects ? classification.get 'subjects').then ([subject]) =>
-      # We'll only handle one subject per classification right now.
-      # TODO: Support multi-subject classifications in the future.
-      @setState {subject}
+    unless prevProps.classification is @props.classification
+      @loadClassificationsCount @props.subject
+
+  onComplete: ->
+    classificationsThisSession += 1
+    @maybeLaunchMiniCourse()
+    @maybeRequestUserProjectPreferences()
+    @props.onComplete?()
+
+  maybeRequestUserProjectPreferences: ->
+    if classificationsThisSession % RELOAD_UPP_EVERY is 0 and @props.project?.experimental_tools.includes('workflow assignment')
+      @props.requestUserProjectPreferences(@props.project, @props.user)
+
+  maybeLaunchMiniCourse: ->
+    shouldPrompt = classificationsThisSession % PROMPT_MINI_COURSE_EVERY is 0
+    split = @props.splits?['mini-course.visible']
+    isntHidden = not split or split?.variant?.value?.auto
+    if shouldPrompt and isntHidden
+      MiniCourse.startIfNecessary @state.minicourse, @props.preferences, @props.user, @context.geordi, @context.store
+
+  checkExpertClassifier: (props = @props) ->
+    if props.project and props.user and @state.expertClassifier is null
+      getUserRoles = props.project.get('project_roles', user_id: props.user.id)
+        .then (projectRoles) =>
+          getProjectRoleHavers = Promise.all projectRoles.map (projectRole) =>
+            projectRole.get 'owner'
+          getProjectRoleHavers
+            .then (projectRoleHavers) =>
+              (projectRoles[i].roles for user, i in projectRoleHavers when user is props.user)
+            .then (setsOfUserRoles) =>
+              [[], setsOfUserRoles...].reduce (set, next) =>
+                set.concat next
+
+      getUserRoles.then (userRoles) =>
+        expertClassifier = isAdmin() or 'owner' in userRoles or 'collaborator' in userRoles or 'expert' in userRoles
+        @setState {expertClassifier, userRoles}
+
+  loadClassificationsCount: (subject) ->
+    query = {};
+    # Split 'subject.first-to-classify.visible' is a visibility split on 
+    # a generic pre-classification notification banner on the classify page.
+    # Split 'subject.first-to-classify' is a text split in the classification summary.
+    # Projects need classification summarys visible for this to work.
+    if @props.splits and subject and (@props.splits['subject.first-to-classify.visible'] or @props.splits['subject.first-to-classify'])
+      query =
+        workflow_id: @props.workflow.id,
+        subject_id: subject.id
+
+      apiClient.type('subject_workflow_statuses')
+      .get(query)
+      .then ([sws]) =>
+        classificationCount = if sws?.classifications_count then sws.classifications_count else 0
+        @setState({ classificationCount });
+
+        if classificationCount is 0 and @props.splits?['subject.first-to-classify.visible']
+          @context.geordi.logEvent({
+            type: 'first to classify banner shown'
+            data: { workflowId: @props.workflow.id }
+          })
 
   render: ->
-    if @state.workflow? and @state.subject?
-      <Classifier {...@props} {...@state} />
-    else
-      <span>Loading classifier</span>
+    <div className="content-container">
+      {if @props.project.experimental_tools.indexOf('workflow assignment') > -1 and @props.project.id is '1104' and not @props.user # Gravity Spy
+        <CustomSignInPrompt classificationsThisSession={classificationsThisSession}>
+          <p>Please sign in or sign up to access more glitch types and classification options as well as our mini-course.</p>
+        </CustomSignInPrompt>}
+
+      {if @state.classificationCount is 0 and @props.splits?['subject.first-to-classify.visible']
+        <VisibilitySplit splits={@props.splits} splitKey={'subject.first-to-classify.visible'} elementKey={'div'}>
+          <div className="classifier-announcement-banner classifier-announcement-banner--yellow">
+            <p>You're the first person to classify this subject!</p>
+          </div>
+        </VisibilitySplit>}
+
+      {if @props.workflow? and @props.subject?
+        <Classifier {...@props}
+          workflow={@props.workflow}
+          subject={@props.subject}
+          expertClassifier={@state.expertClassifier}
+          userRoles={@state.userRoles}
+          tutorial={@state.tutorial}
+          minicourse={@state.minicourse}
+          guide={@state.guide}
+          guideIcons={@state.guideIcons}
+          onComplete={@onComplete}
+          classificationCount={@state.classificationCount}
+        >
+          {@props.children}
+        </Classifier>
+      else
+        <span>Loading classifier...</span>}
+    </div>
+
+mapStateToProps = (state) -> ({
+  translations: state.translations
+});
+
+mapDispatchToProps = (dispatch) -> ({
+  actions: {
+    translations: bindActionCreators(translationActions, dispatch)
+  }
+});
+
+module.exports = connect(mapStateToProps, mapDispatchToProps)(ClassifierWrapper)
+module.exports.ClassifierWrapper = ClassifierWrapper

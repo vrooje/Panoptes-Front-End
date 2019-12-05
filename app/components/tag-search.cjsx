@@ -1,39 +1,58 @@
 React = require 'react'
-Select = require 'react-select'
-apiClient = require '../api/client'
-debounce = require 'debounce'
+PropTypes = require 'prop-types'
+createReactClass = require 'create-react-class'
+Select = require('react-select').default
+apiClient = require 'panoptes-client/lib/api-client'
 
-module.exports = React.createClass
+module.exports = createReactClass
   displayName: 'TagSearch'
+
+  propTypes:
+    multi: PropTypes.bool
+    value: PropTypes.array
 
   getDefaultProps: ->
     multi: true
+    value: []
+  
+  getInitialState: ->
+    tags: []
+  
+  componentWillMount: ->
+    @setState tags: @props.value
+  
+  componentWillReceiveProps: (newProps) ->
+    @setState tags: newProps.value unless newProps.value is @state.tags
+
+  onChange: (options) ->
+    tags = options.map (option) ->
+      option.value
+    @setState {tags}
+    @props.onChange options
 
   searchTags: (value, callback) ->
     if value is ''
-      callback null, { options: [] }
+      callback null, {}
     else
       apiClient.type('tags').get search: "#{value}", page_size: 10
         .then (tags) =>
           opts = for tag in tags
             { value: tag.name, label: tag.name }
-          callback null, {
-            options: opts
-          }
+          { options: opts }
 
   saveCurrent: ({target}) ->
-    value = target.value
-    unless value is ''
-      @refs.tagSearch.addValue(value)
-
-  handleInputChange: ({target}) ->
-    value = target.value
-    if value.slice("-1") is ","
-      @refs.tagSearch.addValue(value.slice(0, -1))
+    tags = @state.tags
+    unless target.value is ''
+      tags.push target.value
+      @setState {tags}
+      options = tags.map (tag) ->
+        label: tag, value: tag
+      @props.onChange options
 
   render: ->
-    value = @props.value.join(',')
-    <Select
+    value = @state.tags.map (tag) ->
+      {label: tag, value: tag}
+    <Select.Async
       ref="tagSearch"
       multi={@props.multi}
       name={@props.name}
@@ -42,6 +61,5 @@ module.exports = React.createClass
       className="search standard-input"
       closeAfterClick={false}
       onBlur={@saveCurrent}
-      onChange={@props.onChange}
-      onInputChange={@handleInputChange}
-      asyncOptions={debounce(@searchTags, 200)} />
+      onChange={@onChange}
+      loadOptions={@searchTags} />
